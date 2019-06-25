@@ -20,6 +20,9 @@ func TestDecoder(t *testing.T) {
 	d := decoder.New()
 	results, err := d.Decode(in)
 
+	t.Error("testing build failure")
+	t.FailNow()
+
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 		t.FailNow()
