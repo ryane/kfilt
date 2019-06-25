@@ -26,3 +26,18 @@ changelog:
     - '^test:'
     - Merge pull request
     - Merge branch
+dockers:
+- goos: linux
+  goarch: amd64
+  goarm: ''
+  binaries:
+  - kfilt
+  image_templates:
+  - "ryane/{{.ProjectName}}:latest"
+  - "ryane/{{.ProjectName}}:{{ .Tag }}"
+  skip_push: false
+  dockerfile: Dockerfile
+  build_flag_templates:
+  - "--label=org.label-schema.schema-version=1.0"
+  - "--label=org.label-schema.version={{.Version}}"
+  - "--label=org.label-schema.name={{.ProjectName}}"
