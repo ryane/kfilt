@@ -13,6 +13,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var GitCommit, Version string
+
 type root struct {
 	kind     string
 	name     string
@@ -31,13 +33,16 @@ func newRootCommand(args []string) *cobra.Command {
 				os.Exit(1)
 			}
 		},
+		Version: func() string {
+			return fmt.Sprintf("%s (%s)\n", Version, GitCommit)
+		}(),
 	}
 
 	rootCmd.Flags().StringVarP(&root.kind, "kind", "k", "", "Only include resources of kind")
 	rootCmd.Flags().StringVarP(&root.name, "name", "n", "", "Only include resources of name")
 	rootCmd.Flags().StringVarP(&root.filename, "filename", "f", "", "Read manifests from file")
 
-	rootCmd.AddCommand(newVersionCommand())
+	rootCmd.SetVersionTemplate(`{{.Version}}`)
 
 	return rootCmd
 }
