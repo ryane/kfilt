@@ -1,0 +1,43 @@
+project_name: kfilt
+before:
+  hooks:
+    - go mod download
+builds:
+- env:
+  - CGO_ENABLED=0
+  goos:
+  - windows
+  - linux
+  - darwin
+  # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.
+  ldflags:
+  - -s -w -X github.com/ryane/kfilt/cmd.Version={{.Version}} -X github.com/ryane/kfilt/cmd.GitCommit={{.ShortCommit}}
+archives:
+- format: binary
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "master"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+    - Merge pull request
+    - Merge branch
+dockers:
+- goos: linux
+  goarch: amd64
+  goarm: ''
+  binaries:
+  - kfilt
+  image_templates:
+  - "ryane/{{.ProjectName}}:latest"
+  - "ryane/{{.ProjectName}}:{{ .Tag }}"
+  skip_push: false
+  dockerfile: Dockerfile
+  build_flag_templates:
+  - "--label=org.label-schema.schema-version=1.0"
+  - "--label=org.label-schema.version={{.Version}}"
+  - "--label=org.label-schema.name={{.ProjectName}}"
