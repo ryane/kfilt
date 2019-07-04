@@ -6,23 +6,98 @@ import (
 	"github.com/ryane/kfilt/pkg/filter"
 )
 
+type includeNames []string
+type includeKinds []string
+type excludeNames []string
+type excludeKinds []string
+type expectNames []string
+
 func TestFilter(t *testing.T) {
 	tests := []struct {
-		names       []string
-		kinds       []string
-		expectNames []string
+		includeKinds includeKinds
+		includeNames includeNames
+		excludeKinds excludeKinds
+		excludeNames excludeNames
+		expectNames  []string
 	}{
-		{[]string{"test-sa"}, []string{"Deployment"}, []string{}},
-		{[]string{"test-sa"}, []string{}, []string{"test-sa"}},
-		{[]string{"test-sa"}, []string{""}, []string{"test-sa"}},
-		{[]string{}, []string{"ServiceAccount"}, []string{"test-sa", "test-sa-2"}},
-		{[]string{"test-pod", "test-deployment"}, []string{"ServiceAccount"}, []string{}},
+		{
+			includeKinds{"Deployment"},
+			includeNames{"test-sa"},
+			excludeKinds{},
+			excludeNames{},
+			expectNames{},
+		},
+		{
+			includeKinds{},
+			includeNames{"test-sa"},
+			excludeKinds{},
+			excludeNames{},
+			expectNames{"test-sa"},
+		},
+		{
+			includeKinds{""},
+			includeNames{"test-sa"},
+			excludeKinds{},
+			excludeNames{},
+			expectNames{"test-sa"},
+		},
+		{
+			includeKinds{"ServiceAccount"},
+			includeNames{},
+			excludeKinds{},
+			excludeNames{},
+			expectNames{"test-sa", "test-sa-2"},
+		},
+		{
+			includeKinds{"ServiceAccount"},
+			includeNames{"test-pod", "test-deployment"},
+			excludeKinds{},
+			excludeNames{},
+			expectNames{},
+		},
+		{
+			includeKinds{"ServiceAccount"},
+			includeNames{},
+			excludeKinds{},
+			excludeNames{"test-sa"},
+			expectNames{"test-sa-2"},
+		},
+		{
+			includeKinds{},
+			includeNames{},
+			excludeKinds{"ServiceAccount"},
+			excludeNames{},
+			expectNames{"test-pod", "test-deployment"},
+		},
+		{
+			includeKinds{},
+			includeNames{},
+			excludeKinds{"ServiceAccount", "Deployment"},
+			excludeNames{},
+			expectNames{"test-pod"},
+		},
+		{
+			includeKinds{"ServiceAccount", "Deployment"},
+			includeNames{},
+			excludeKinds{"ServiceAccount"},
+			excludeNames{},
+			expectNames{"test-deployment"},
+		},
+		{
+			includeKinds{},
+			includeNames{"test-sa", "test-sa-2"},
+			excludeKinds{"ServiceAccount"},
+			excludeNames{},
+			expectNames{},
+		},
 	}
 
 	for _, test := range tests {
 		f := filter.New(
-			filter.KindMatcher(test.kinds),
-			filter.NameMatcher(test.names),
+			filter.KindFilter(test.includeKinds...),
+			filter.NameFilter(test.includeNames...),
+			filter.ExcludeKindFilter(test.excludeKinds...),
+			filter.ExcludeNameFilter(test.excludeNames...),
 		)
 
 		results := f.Filter(input)

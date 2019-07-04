@@ -13,12 +13,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var GitCommit, Version string
+var (
+	// GitCommit tracks the current git commit
+	GitCommit string
+	// Version tracks the current version
+	Version string
+)
 
 type root struct {
-	kind     string
-	name     string
-	filename string
+	kind        string
+	name        string
+	excludeKind string
+	excludeName string
+	filename    string
 }
 
 func newRootCommand(args []string) *cobra.Command {
@@ -39,7 +46,9 @@ func newRootCommand(args []string) *cobra.Command {
 	}
 
 	rootCmd.Flags().StringVarP(&root.kind, "kind", "k", "", "Only include resources of kind")
-	rootCmd.Flags().StringVarP(&root.name, "name", "n", "", "Only include resources of name")
+	rootCmd.Flags().StringVarP(&root.name, "name", "n", "", "Only include resources with name")
+	rootCmd.Flags().StringVarP(&root.excludeKind, "exclude-kind", "K", "", "Exclude resources of kind")
+	rootCmd.Flags().StringVarP(&root.excludeName, "exclude-name", "N", "", "Exclude resources with name")
 	rootCmd.Flags().StringVarP(&root.filename, "filename", "f", "", "Read manifests from file")
 
 	rootCmd.SetVersionTemplate(`{{.Version}}`)
@@ -74,8 +83,10 @@ func (r *root) run() error {
 
 	// filter
 	filtered := filter.New(
-		filter.KindMatcher([]string{r.kind}),
-		filter.NameMatcher([]string{r.name}),
+		filter.KindFilter(r.kind),
+		filter.NameFilter(r.name),
+		filter.ExcludeKindFilter(r.excludeKind),
+		filter.ExcludeNameFilter(r.excludeName),
 	).Filter(results)
 
 	// print
@@ -86,6 +97,7 @@ func (r *root) run() error {
 	return nil
 }
 
+// Execute runs the root command
 func Execute(args []string) {
 	if err := newRootCommand(args).Execute(); err != nil {
 		log.WithError(err).Error()
