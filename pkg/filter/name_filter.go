@@ -21,7 +21,7 @@ func (f *nameMatcher) Match(u unstructured.Unstructured) bool {
 	}
 
 	for _, name := range f.names {
-		if name == u.GetName() {
+		if strings.EqualFold(name, u.GetName()) {
 			return true
 		}
 	}
