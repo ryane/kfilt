@@ -21,7 +21,7 @@ func (f *kindMatcher) Match(u unstructured.Unstructured) bool {
 	}
 
 	for _, kind := range f.kinds {
-		if kind == u.GetKind() {
+		if strings.EqualFold(kind, u.GetKind()) {
 			return true
 		}
 	}

@@ -36,6 +36,7 @@ func TestNameFilter(t *testing.T) {
 		{[]string{"test-sa"}, []string{"test-sa"}},
 		{[]string{"test-sa", "test-sa-2"}, []string{"test-sa", "test-sa-2"}},
 		{[]string{"test-deployment"}, []string{"test-deployment"}},
+		{[]string{"TEST-DEPLOYMENT"}, []string{"test-deployment"}},
 		{[]string{"test-deployment", "test-pod"}, []string{"test-pod", "test-deployment"}},
 	}
 

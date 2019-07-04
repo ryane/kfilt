@@ -35,6 +35,7 @@ func TestKindFilter(t *testing.T) {
 	}{
 		{[]string{"ServiceAccount"}, []string{"test-sa", "test-sa-2"}},
 		{[]string{"Deployment"}, []string{"test-deployment"}},
+		{[]string{"deployment"}, []string{"test-deployment"}},
 		{[]string{"Pod"}, []string{"test-pod"}},
 		{[]string{"ServiceAccount", "Deployment"}, []string{"test-sa", "test-sa-2", "test-deployment"}},
 	}
