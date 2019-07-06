@@ -8,23 +8,24 @@ type Filter interface {
 	Filter([]unstructured.Unstructured) []unstructured.Unstructured
 }
 
-type defaultFilter struct {
-	matchers []Matcher
+type chainedFilter struct {
+	filters []Filter
 }
 
 type Matcher interface {
 	Match(unstructured.Unstructured) bool
+	Valid() bool
 }
 
-func New(matchers ...Matcher) Filter {
-	return &defaultFilter{matchers}
+func New(filters ...Filter) Filter {
+	return &chainedFilter{filters}
 }
 
-func (f *defaultFilter) Filter(unstructureds []unstructured.Unstructured) []unstructured.Unstructured {
+func (f *chainedFilter) Filter(unstructureds []unstructured.Unstructured) []unstructured.Unstructured {
 	filtered := unstructureds
 
-	for _, matcher := range f.matchers {
-		filtered = filter(filtered, matcher)
+	for _, filter := range f.filters {
+		filtered = filter.Filter(filtered)
 	}
 
 	return filtered
@@ -34,6 +35,16 @@ func filter(unstructureds []unstructured.Unstructured, matcher Matcher) []unstru
 	filtered := []unstructured.Unstructured{}
 	for _, u := range unstructureds {
 		if matcher.Match(u) {
+			filtered = append(filtered, u)
+		}
+	}
+	return filtered
+}
+
+func excludeFilter(unstructureds []unstructured.Unstructured, matcher Matcher) []unstructured.Unstructured {
+	filtered := []unstructured.Unstructured{}
+	for _, u := range unstructureds {
+		if !matcher.Match(u) {
 			filtered = append(filtered, u)
 		}
 	}

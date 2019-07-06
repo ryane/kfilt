@@ -13,12 +13,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var GitCommit, Version string
+var (
+	// GitCommit tracks the current git commit
+	GitCommit string
+	// Version tracks the current version
+	Version string
+)
 
 type root struct {
-	kind     string
-	name     string
-	filename string
+	includeKinds []string
+	includeNames []string
+	excludeKinds []string
+	excludeNames []string
+	filename     string
 }
 
 func newRootCommand(args []string) *cobra.Command {
@@ -38,8 +45,10 @@ func newRootCommand(args []string) *cobra.Command {
 		}(),
 	}
 
-	rootCmd.Flags().StringVarP(&root.kind, "kind", "k", "", "Only include resources of kind")
-	rootCmd.Flags().StringVarP(&root.name, "name", "n", "", "Only include resources of name")
+	rootCmd.Flags().StringSliceVarP(&root.includeKinds, "kind", "k", []string{}, "Only include resources of kind")
+	rootCmd.Flags().StringSliceVarP(&root.includeNames, "name", "n", []string{}, "Only include resources with name")
+	rootCmd.Flags().StringSliceVarP(&root.excludeKinds, "exclude-kind", "K", []string{}, "Exclude resources of kind")
+	rootCmd.Flags().StringSliceVarP(&root.excludeNames, "exclude-name", "N", []string{}, "Exclude resources with name")
 	rootCmd.Flags().StringVarP(&root.filename, "filename", "f", "", "Read manifests from file")
 
 	rootCmd.SetVersionTemplate(`{{.Version}}`)
@@ -73,10 +82,15 @@ func (r *root) run() error {
 	}
 
 	// filter
-	filtered := filter.New(
-		filter.KindMatcher([]string{r.kind}),
-		filter.NameMatcher([]string{r.name}),
-	).Filter(results)
+	filters := []filter.Filter{}
+	filters = append(
+		filters,
+		filter.ExcludeNameFilter(r.excludeNames...),
+		filter.ExcludeKindFilter(r.excludeKinds...),
+		filter.NameFilter(r.includeNames...),
+		filter.KindFilter(r.includeKinds...),
+	)
+	filtered := filter.New(filters...).Filter(results)
 
 	// print
 	if err := printer.New().Print(filtered); err != nil {
@@ -86,6 +100,7 @@ func (r *root) run() error {
 	return nil
 }
 
+// Execute runs the root command
 func Execute(args []string) {
 	if err := newRootCommand(args).Execute(); err != nil {
 		log.WithError(err).Error()
