@@ -21,11 +21,11 @@ var (
 )
 
 type root struct {
-	kind        string
-	name        string
-	excludeKind string
-	excludeName string
-	filename    string
+	includeKinds []string
+	includeNames []string
+	excludeKinds []string
+	excludeNames []string
+	filename     string
 }
 
 func newRootCommand(args []string) *cobra.Command {
@@ -45,10 +45,10 @@ func newRootCommand(args []string) *cobra.Command {
 		}(),
 	}
 
-	rootCmd.Flags().StringVarP(&root.kind, "kind", "k", "", "Only include resources of kind")
-	rootCmd.Flags().StringVarP(&root.name, "name", "n", "", "Only include resources with name")
-	rootCmd.Flags().StringVarP(&root.excludeKind, "exclude-kind", "K", "", "Exclude resources of kind")
-	rootCmd.Flags().StringVarP(&root.excludeName, "exclude-name", "N", "", "Exclude resources with name")
+	rootCmd.Flags().StringSliceVarP(&root.includeKinds, "kind", "k", []string{}, "Only include resources of kind")
+	rootCmd.Flags().StringSliceVarP(&root.includeNames, "name", "n", []string{}, "Only include resources with name")
+	rootCmd.Flags().StringSliceVarP(&root.excludeKinds, "exclude-kind", "K", []string{}, "Exclude resources of kind")
+	rootCmd.Flags().StringSliceVarP(&root.excludeNames, "exclude-name", "N", []string{}, "Exclude resources with name")
 	rootCmd.Flags().StringVarP(&root.filename, "filename", "f", "", "Read manifests from file")
 
 	rootCmd.SetVersionTemplate(`{{.Version}}`)
@@ -82,12 +82,15 @@ func (r *root) run() error {
 	}
 
 	// filter
-	filtered := filter.New(
-		filter.KindFilter(r.kind),
-		filter.NameFilter(r.name),
-		filter.ExcludeKindFilter(r.excludeKind),
-		filter.ExcludeNameFilter(r.excludeName),
-	).Filter(results)
+	filters := []filter.Filter{}
+	filters = append(
+		filters,
+		filter.ExcludeNameFilter(r.excludeNames...),
+		filter.ExcludeKindFilter(r.excludeKinds...),
+		filter.NameFilter(r.includeNames...),
+		filter.KindFilter(r.includeKinds...),
+	)
+	filtered := filter.New(filters...).Filter(results)
 
 	// print
 	if err := printer.New().Print(filtered); err != nil {

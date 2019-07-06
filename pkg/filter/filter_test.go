@@ -21,6 +21,13 @@ func TestFilter(t *testing.T) {
 		expectNames  []string
 	}{
 		{
+			includeKinds{"Deployment", "Pod"},
+			includeNames{},
+			excludeKinds{},
+			excludeNames{},
+			expectNames{"test-pod", "test-deployment"},
+		},
+		{
 			includeKinds{"Deployment"},
 			includeNames{"test-sa"},
 			excludeKinds{},
@@ -33,6 +40,13 @@ func TestFilter(t *testing.T) {
 			excludeKinds{},
 			excludeNames{},
 			expectNames{"test-sa"},
+		},
+		{
+			includeKinds{},
+			includeNames{"test-sa", "test-sa-2"},
+			excludeKinds{},
+			excludeNames{},
+			expectNames{"test-sa", "test-sa-2"},
 		},
 		{
 			includeKinds{""},
@@ -94,10 +108,10 @@ func TestFilter(t *testing.T) {
 
 	for _, test := range tests {
 		f := filter.New(
-			filter.KindFilter(test.includeKinds...),
-			filter.NameFilter(test.includeNames...),
-			filter.ExcludeKindFilter(test.excludeKinds...),
 			filter.ExcludeNameFilter(test.excludeNames...),
+			filter.ExcludeKindFilter(test.excludeKinds...),
+			filter.NameFilter(test.includeNames...),
+			filter.KindFilter(test.includeKinds...),
 		)
 
 		results := f.Filter(input)

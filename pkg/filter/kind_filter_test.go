@@ -45,6 +45,7 @@ func TestKindFilter(t *testing.T) {
 		expectNames []string
 	}{
 		{[]string{"ServiceAccount"}, []string{"test-sa", "test-sa-2"}},
+		{[]string{"ServiceAccount", "Deployment"}, []string{"test-sa", "test-sa-2", "test-deployment"}},
 		{[]string{"Deployment"}, []string{"test-deployment"}},
 		{[]string{"deployment"}, []string{"test-deployment"}},
 		{[]string{"Pod"}, []string{"test-pod"}},
