@@ -2,8 +2,9 @@ package decoder
 
 import (
 	"bytes"
-	"github.com/pkg/errors"
 	"io"
+
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
 )
@@ -18,6 +19,7 @@ func New() Decoder {
 	return &kubernetesDecoder{}
 }
 
+// TODO: this should take a Reader?
 func (k *kubernetesDecoder) Decode(in []byte) ([]unstructured.Unstructured, error) {
 	var (
 		result []unstructured.Unstructured
