@@ -2,6 +2,7 @@ package input
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -9,9 +10,9 @@ import (
 	"strings"
 )
 
-func Read(f string) ([]byte, error) {
+func Read(f string) (io.ReadCloser, error) {
 	if f == "" {
-		return ioutil.ReadAll(os.Stdin)
+		return ioutil.NopCloser(os.Stdin), nil
 	}
 
 	if strings.HasPrefix(f, "http://") || strings.HasPrefix(f, "https://") {
@@ -23,10 +24,14 @@ func Read(f string) ([]byte, error) {
 		return httpGet(url)
 	}
 
-	return ioutil.ReadFile(f)
+	file, err := os.Open(f)
+	if err != nil {
+		return nil, err
+	}
+	return file, nil
 }
 
-func httpGet(url *url.URL) ([]byte, error) {
+func httpGet(url *url.URL) (io.ReadCloser, error) {
 	u := url.String()
 	resp, err := http.Get(u)
 	if err != nil {
@@ -37,6 +42,5 @@ func httpGet(url *url.URL) ([]byte, error) {
 		return nil, fmt.Errorf("error getting %q: %s (%d)", u, resp.Status, resp.StatusCode)
 	}
 
-	defer resp.Body.Close()
-	return ioutil.ReadAll(resp.Body)
+	return resp.Body, nil
 }

@@ -1,7 +1,6 @@
 package decoder
 
 import (
-	"bytes"
 	"io"
 
 	"github.com/pkg/errors"
@@ -10,7 +9,7 @@ import (
 )
 
 type Decoder interface {
-	Decode([]byte) ([]unstructured.Unstructured, error)
+	Decode(io.Reader) ([]unstructured.Unstructured, error)
 }
 
 type kubernetesDecoder struct{}
@@ -20,13 +19,13 @@ func New() Decoder {
 }
 
 // TODO: this should take a Reader?
-func (k *kubernetesDecoder) Decode(in []byte) ([]unstructured.Unstructured, error) {
+func (k *kubernetesDecoder) Decode(in io.Reader) ([]unstructured.Unstructured, error) {
 	var (
 		result []unstructured.Unstructured
 		err    error
 	)
 
-	decoder := k8syaml.NewYAMLOrJSONDecoder(bytes.NewReader(in), 1024)
+	decoder := k8syaml.NewYAMLOrJSONDecoder(in, 1024)
 
 	for err == nil {
 		var out unstructured.Unstructured

@@ -23,12 +23,23 @@ func TestRead(t *testing.T) {
 	}{
 		{"", ""},
 		{tmpfile, filedata},
-		// TODO: fix me
-		{"https://knative.dev/robots.txt", "User-agent: *"},
+		{"https://httpbin.org/status/200", ""},
 	}
 
 	for _, test := range tests {
-		data, _ := input.Read(test.filename)
+		r, err := input.Read(test.filename)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
+		defer r.Close()
+		data, err := ioutil.ReadAll(r)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
 		if string(data) != test.expectedString {
 			t.Errorf("expected %s, got %s", test.expectedString, string(data))
 			t.FailNow()

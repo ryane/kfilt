@@ -57,19 +57,15 @@ func newRootCommand(args []string) *cobra.Command {
 }
 
 func (r *root) run() error {
-	var (
-		in  []byte
-		err error
-	)
-
 	// get input
-	in, err = input.Read(r.filename)
+	in, err := input.Read(r.filename)
 	if err != nil {
 		if r.filename == "" {
 			return errors.Wrap(err, "failed to read stdin")
 		}
 		return errors.Wrap(err, fmt.Sprintf("failed to read %q", r.filename))
 	}
+	defer in.Close()
 
 	// decode
 	results, err := decoder.New().Decode(in)
