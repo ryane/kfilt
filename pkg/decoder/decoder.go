@@ -18,7 +18,6 @@ func New() Decoder {
 	return &kubernetesDecoder{}
 }
 
-// TODO: this should take a Reader?
 func (k *kubernetesDecoder) Decode(in io.Reader) ([]unstructured.Unstructured, error) {
 	var (
 		result []unstructured.Unstructured
