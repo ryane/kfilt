@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/pkg/errors"
 	"github.com/ryane/kfilt/pkg/decoder"
 	"github.com/ryane/kfilt/pkg/filter"
+	"github.com/ryane/kfilt/pkg/input"
 	"github.com/ryane/kfilt/pkg/printer"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -57,23 +57,15 @@ func newRootCommand(args []string) *cobra.Command {
 }
 
 func (r *root) run() error {
-	var (
-		in  []byte
-		err error
-	)
-
 	// get input
-	if r.filename != "" {
-		in, err = ioutil.ReadFile(r.filename)
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("failed to read file %q", r.filename))
-		}
-	} else {
-		in, err = ioutil.ReadAll(os.Stdin)
-		if err != nil {
+	in, err := input.Read(r.filename)
+	if err != nil {
+		if r.filename == "" {
 			return errors.Wrap(err, "failed to read stdin")
 		}
+		return errors.Wrap(err, fmt.Sprintf("failed to read %q", r.filename))
 	}
+	defer in.Close()
 
 	// decode
 	results, err := decoder.New().Decode(in)

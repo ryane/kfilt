@@ -1,7 +1,7 @@
 package decoder_test
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/ryane/kfilt/pkg/decoder"
@@ -10,11 +10,12 @@ import (
 func TestDecoder(t *testing.T) {
 	// load test data
 	file := "./test.yaml"
-	in, err := ioutil.ReadFile(file)
+	in, err := os.Open(file)
 	if err != nil {
 		t.Errorf("error loading test data: %v", err)
 		t.FailNow()
 	}
+	defer in.Close()
 
 	// decode
 	d := decoder.New()
