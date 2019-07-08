@@ -29,7 +29,7 @@ func (k *kubernetesDecoder) Decode(in io.Reader) ([]unstructured.Unstructured, e
 	for err == nil {
 		var out unstructured.Unstructured
 		err = decoder.Decode(&out)
-		if err == nil {
+		if err == nil && len(out.Object) > 0 {
 			result = append(result, out)
 		}
 	}
