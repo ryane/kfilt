@@ -25,6 +25,13 @@ func TestSelectorMatcher(t *testing.T) {
 		},
 		{
 			[]filter.Selector{
+				{Kind: "role"},
+			},
+			role(),
+			true,
+		},
+		{
+			[]filter.Selector{
 				{Kind: "ServiceAccount"},
 			},
 			role(),

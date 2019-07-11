@@ -41,7 +41,7 @@ func filter(unstructureds []unstructured.Unstructured, matcher Matcher) []unstru
 	return filtered
 }
 
-func excludeFilter(unstructureds []unstructured.Unstructured, matcher Matcher) []unstructured.Unstructured {
+func exclude(unstructureds []unstructured.Unstructured, matcher Matcher) []unstructured.Unstructured {
 	filtered := []unstructured.Unstructured{}
 	for _, u := range unstructureds {
 		if !matcher.Match(u) {

@@ -27,7 +27,7 @@ type excludeNameFilter struct {
 
 func (f *excludeNameFilter) Filter(unstructureds []unstructured.Unstructured) []unstructured.Unstructured {
 	if f.matcher.Valid() {
-		return excludeFilter(unstructureds, f.matcher)
+		return exclude(unstructureds, f.matcher)
 	}
 	return unstructureds
 }

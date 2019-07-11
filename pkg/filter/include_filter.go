@@ -1,12 +1,10 @@
 package filter
 
 import (
+	"strings"
+
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
-
-type includeFilter struct {
-	matcher Matcher
-}
 
 type Selector struct {
 	Group     string
@@ -14,6 +12,10 @@ type Selector struct {
 	Kind      string
 	Name      string
 	Namespace string
+}
+
+type includeFilter struct {
+	matcher Matcher
 }
 
 func (f *includeFilter) Filter(unstructureds []unstructured.Unstructured) []unstructured.Unstructured {
@@ -42,25 +44,25 @@ func (f *selectorMatcher) Valid() bool {
 func (f *selectorMatcher) Match(u unstructured.Unstructured) bool {
 	for _, s := range f.selectors {
 		gvk := u.GroupVersionKind()
-		if s.Group != "" && s.Group != gvk.Group {
+		if s.Group != "" && !strings.EqualFold(s.Group, gvk.Group) {
 			return false
 		}
-		if s.Version != "" && s.Version != gvk.Version {
+		if s.Version != "" && !strings.EqualFold(s.Version, gvk.Version) {
 			return false
 		}
-		if s.Kind != "" && s.Kind != gvk.Kind {
+		if s.Kind != "" && !strings.EqualFold(s.Kind, gvk.Kind) {
 			return false
 		}
-		if s.Name != "" && s.Name != u.GetName() {
+		if s.Name != "" && !strings.EqualFold(s.Name, u.GetName()) {
 			return false
 		}
 		if s.Namespace != "" {
 			ns := u.GetNamespace()
-			if s.Namespace == "default" {
-				if ns != "" && s.Namespace != ns {
+			if strings.ToLower(s.Namespace) == "default" {
+				if ns != "" && !strings.EqualFold(s.Namespace, ns) {
 					return false
 				}
-			} else if s.Namespace != ns {
+			} else if !strings.EqualFold(s.Namespace, ns) {
 				return false
 			}
 		}
