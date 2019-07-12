@@ -1,131 +1,159 @@
 package filter_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/ryane/kfilt/pkg/filter"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-type includeNames []string
-type includeKinds []string
-type excludeNames []string
-type excludeKinds []string
-type expectNames []string
+type excludeSelectors []filter.Selector
+type includeSelectors []filter.Selector
+type expectGVKNS []string
 
 func TestFilter(t *testing.T) {
 	tests := []struct {
-		includeKinds includeKinds
-		includeNames includeNames
-		excludeKinds excludeKinds
-		excludeNames excludeNames
-		expectNames  []string
+		exclude     excludeSelectors
+		include     includeSelectors
+		expectNames []string
 	}{
+		// no filters, return all
 		{
-			includeKinds{"Deployment", "Pod"},
-			includeNames{},
-			excludeKinds{},
-			excludeNames{},
-			expectNames{"test-pod", "test-deployment"},
+			excludeSelectors{},
+			includeSelectors{},
+			expectGVKNS{
+				"/v1:serviceaccount:test-sa",
+				"/v1:serviceaccount:test-sa-2",
+				"/v1:pod:test-pod",
+				"extensions/v1beta1:deployment:test-deployment",
+				"extensions/v1beta1:deployment:app",
+				"/v1:configmap:app",
+			},
 		},
+		// exclude service accounts
 		{
-			includeKinds{"Deployment"},
-			includeNames{"test-sa"},
-			excludeKinds{},
-			excludeNames{},
-			expectNames{},
+			excludeSelectors{
+				{
+					Kind: "ServiceAccount",
+				},
+			},
+			includeSelectors{},
+			expectGVKNS{
+				"/v1:pod:test-pod",
+				"extensions/v1beta1:deployment:test-deployment",
+				"extensions/v1beta1:deployment:app",
+				"/v1:configmap:app",
+			},
 		},
+		// exclude service accounts and pods
 		{
-			includeKinds{},
-			includeNames{"test-sa"},
-			excludeKinds{},
-			excludeNames{},
-			expectNames{"test-sa"},
+			excludeSelectors{
+				{
+					Kind: "ServiceAccount",
+				},
+				{
+					Kind: "pod",
+				},
+			},
+			includeSelectors{},
+			expectGVKNS{
+				"extensions/v1beta1:deployment:test-deployment",
+				"extensions/v1beta1:deployment:app",
+				"/v1:configmap:app",
+			},
 		},
+		// exclude deployments named "app"
 		{
-			includeKinds{},
-			includeNames{"test-sa", "test-sa-2"},
-			excludeKinds{},
-			excludeNames{},
-			expectNames{"test-sa", "test-sa-2"},
+			excludeSelectors{
+				{
+					Kind: "deployment",
+					Name: "app",
+				},
+			},
+			includeSelectors{},
+			expectGVKNS{
+				"/v1:serviceaccount:test-sa",
+				"/v1:serviceaccount:test-sa-2",
+				"/v1:pod:test-pod",
+				"extensions/v1beta1:deployment:test-deployment",
+				"/v1:configmap:app",
+			},
 		},
+		// include service accounts
 		{
-			includeKinds{""},
-			includeNames{"test-sa"},
-			excludeKinds{},
-			excludeNames{},
-			expectNames{"test-sa"},
+			excludeSelectors{},
+			includeSelectors{
+				{
+					Kind: "ServiceAccount",
+				},
+			},
+			expectGVKNS{
+				"/v1:serviceaccount:test-sa",
+				"/v1:serviceaccount:test-sa-2",
+			},
 		},
+		// include service accounts and pods
 		{
-			includeKinds{"ServiceAccount"},
-			includeNames{},
-			excludeKinds{},
-			excludeNames{},
-			expectNames{"test-sa", "test-sa-2"},
+			excludeSelectors{},
+			includeSelectors{
+				{
+					Kind: "ServiceAccount",
+				},
+				{
+					Kind: "pod",
+				},
+			},
+			expectGVKNS{
+				"/v1:serviceaccount:test-sa",
+				"/v1:serviceaccount:test-sa-2",
+				"/v1:pod:test-pod",
+			},
 		},
+		// include service accounts and pods, but drop test-sa-2
 		{
-			includeKinds{"ServiceAccount"},
-			includeNames{"test-pod", "test-deployment"},
-			excludeKinds{},
-			excludeNames{},
-			expectNames{},
-		},
-		{
-			includeKinds{"ServiceAccount"},
-			includeNames{},
-			excludeKinds{},
-			excludeNames{"test-sa"},
-			expectNames{"test-sa-2"},
-		},
-		{
-			includeKinds{},
-			includeNames{},
-			excludeKinds{"ServiceAccount"},
-			excludeNames{},
-			expectNames{"test-pod", "test-deployment"},
-		},
-		{
-			includeKinds{},
-			includeNames{},
-			excludeKinds{"ServiceAccount", "Deployment"},
-			excludeNames{},
-			expectNames{"test-pod"},
-		},
-		{
-			includeKinds{"ServiceAccount", "Deployment"},
-			includeNames{},
-			excludeKinds{"ServiceAccount"},
-			excludeNames{},
-			expectNames{"test-deployment"},
-		},
-		{
-			includeKinds{},
-			includeNames{"test-sa", "test-sa-2"},
-			excludeKinds{"ServiceAccount"},
-			excludeNames{},
-			expectNames{},
+			excludeSelectors{
+				{
+					Name: "test-sa-2",
+				},
+			},
+			includeSelectors{
+				{
+					Kind: "ServiceAccount",
+				},
+				{
+					Kind: "pod",
+				},
+			},
+			expectGVKNS{
+				"/v1:serviceaccount:test-sa",
+				"/v1:pod:test-pod",
+			},
 		},
 	}
 
 	for _, test := range tests {
-		f := filter.New(
-			filter.ExcludeNameFilter(test.excludeNames...),
-			filter.ExcludeKindFilter(test.excludeKinds...),
-			filter.NameFilter(test.includeNames...),
-			filter.KindFilter(test.includeKinds...),
-		)
+		f := &filter.Filter{test.include, test.exclude}
 
 		results := f.Filter(input)
 		if len(results) != len(test.expectNames) {
-			t.Errorf("expected %d results, got %d", len(test.expectNames), len(results))
+			t.Errorf("expected %d results, got %d\nincludes: %v, excludes: %v", len(test.expectNames), len(results), f.Include, f.Exclude)
 			t.FailNow()
 		}
 
 		for i, u := range results {
-			name := u.GetName()
-			if name != test.expectNames[i] {
-				t.Errorf("expected %s, got %s", test.expectNames[i], name)
+			id := gvkn(u)
+			if gvkn(u) != test.expectNames[i] {
+				t.Errorf("expected %s, got %s\nincludes: %v, excludes: %v", test.expectNames[i], id, f.Include, f.Exclude)
 				t.FailNow()
 			}
 		}
 	}
+}
+
+func gvkn(u unstructured.Unstructured) string {
+	gvk := u.GroupVersionKind()
+	return strings.ToLower(
+		gvk.Group + "/" + gvk.Version + ":" + gvk.Kind + ":" + u.GetName(),
+	)
 }

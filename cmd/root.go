@@ -74,15 +74,25 @@ func (r *root) run() error {
 	}
 
 	// filter
-	filters := []filter.Filter{}
-	filters = append(
-		filters,
-		filter.ExcludeNameFilter(r.excludeNames...),
-		filter.ExcludeKindFilter(r.excludeKinds...),
-		filter.NameFilter(r.includeNames...),
-		filter.KindFilter(r.includeKinds...),
-	)
-	filtered := filter.New(filters...).Filter(results)
+	kfilt := filter.New()
+
+	for _, k := range r.includeKinds {
+		kfilt.AddInclude(filter.Selector{Kind: k})
+	}
+
+	for _, n := range r.includeNames {
+		kfilt.AddInclude(filter.Selector{Name: n})
+	}
+
+	for _, k := range r.excludeKinds {
+		kfilt.AddExclude(filter.Selector{Kind: k})
+	}
+
+	for _, n := range r.excludeNames {
+		kfilt.AddExclude(filter.Selector{Name: n})
+	}
+
+	filtered := kfilt.Filter(results)
 
 	// print
 	if err := printer.New().Print(filtered); err != nil {

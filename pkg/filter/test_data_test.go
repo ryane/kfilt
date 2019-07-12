@@ -7,7 +7,8 @@ import (
 var input = []unstructured.Unstructured{
 	{
 		Object: map[string]interface{}{
-			"kind": "ServiceAccount",
+			"apiVersion": "v1",
+			"kind":       "ServiceAccount",
 			"metadata": map[string]interface{}{
 				"name": "test-sa",
 			},
@@ -15,7 +16,8 @@ var input = []unstructured.Unstructured{
 	},
 	{
 		Object: map[string]interface{}{
-			"kind": "ServiceAccount",
+			"apiVersion": "v1",
+			"kind":       "ServiceAccount",
 			"metadata": map[string]interface{}{
 				"name": "test-sa-2",
 			},
@@ -23,17 +25,41 @@ var input = []unstructured.Unstructured{
 	},
 	{
 		Object: map[string]interface{}{
-			"kind": "Pod",
+			"apiVersion": "v1",
+			"kind":       "Pod",
 			"metadata": map[string]interface{}{
-				"name": "test-pod",
+				"name":      "test-pod",
+				"namespace": "test-ns",
 			},
 		},
 	},
 	{
 		Object: map[string]interface{}{
-			"kind": "Deployment",
+			"apiVersion": "extensions/v1beta1",
+			"kind":       "Deployment",
 			"metadata": map[string]interface{}{
-				"name": "test-deployment",
+				"name":      "test-deployment",
+				"namespace": "test-ns",
+			},
+		},
+	},
+	{
+		Object: map[string]interface{}{
+			"apiVersion": "extensions/v1beta1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name":      "app",
+				"namespace": "app",
+			},
+		},
+	},
+	{
+		Object: map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name":      "app",
+				"namespace": "app",
 			},
 		},
 	},

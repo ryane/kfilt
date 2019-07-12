@@ -7,9 +7,9 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-func TestSelectorMatcher(t *testing.T) {
+func TestSelector(t *testing.T) {
 	tests := []struct {
-		selectors []filter.Selector
+		selectors []filter.Selector // TODO: convert this to a single selector
 		resource  unstructured.Unstructured
 		expected  bool
 	}{
@@ -153,10 +153,11 @@ func TestSelectorMatcher(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		matcher := filter.SelectorMatcher(test.selectors)
-		if result := matcher.Match(test.resource); result != test.expected {
-			t.Errorf("expected %v for %v, got %v", test.expected, test.selectors, result)
-			t.FailNow()
+		for _, selector := range test.selectors {
+			if result := selector.Match(test.resource); result != test.expected {
+				t.Errorf("expected %v for %v, got %v", test.expected, test.selectors, result)
+				t.FailNow()
+			}
 		}
 	}
 }

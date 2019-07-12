@@ -1,37 +1,48 @@
 package filter
 
-import (
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-)
+import "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-type Filter interface {
-	Filter([]unstructured.Unstructured) []unstructured.Unstructured
+type Filter struct {
+	Include []Selector
+	Exclude []Selector
 }
 
-type chainedFilter struct {
-	filters []Filter
+func New() *Filter {
+	return &Filter{
+		Include: []Selector{},
+		Exclude: []Selector{},
+	}
 }
 
-type Matcher interface {
-	Match(unstructured.Unstructured) bool
-	Valid() bool
-}
+func (f *Filter) Filter(unstructureds []unstructured.Unstructured) []unstructured.Unstructured {
+	filtered := append([]unstructured.Unstructured{}, unstructureds...)
 
-func New(filters ...Filter) Filter {
-	return &chainedFilter{filters}
-}
+	// excludes
+	for _, selector := range f.Exclude {
+		filtered = exclude(filtered, selector)
+	}
 
-func (f *chainedFilter) Filter(unstructureds []unstructured.Unstructured) []unstructured.Unstructured {
-	filtered := unstructureds
-
-	for _, filter := range f.filters {
-		filtered = filter.Filter(filtered)
+	// includes
+	if len(f.Include) > 0 {
+		included := []unstructured.Unstructured{}
+		for _, selector := range f.Include {
+			included = append(included, filter(filtered, selector)...)
+		}
+		filtered = included
 	}
 
 	return filtered
 }
 
-func filter(unstructureds []unstructured.Unstructured, matcher Matcher) []unstructured.Unstructured {
+func (f *Filter) AddInclude(s Selector) {
+	f.Include = append(f.Include, s)
+}
+
+func (f *Filter) AddExclude(s Selector) {
+	f.Exclude = append(f.Exclude, s)
+}
+
+func filter(unstructureds []unstructured.Unstructured, matcher Selector) []unstructured.Unstructured {
 	filtered := []unstructured.Unstructured{}
 	for _, u := range unstructureds {
 		if matcher.Match(u) {
@@ -41,7 +52,7 @@ func filter(unstructureds []unstructured.Unstructured, matcher Matcher) []unstru
 	return filtered
 }
 
-func exclude(unstructureds []unstructured.Unstructured, matcher Matcher) []unstructured.Unstructured {
+func exclude(unstructureds []unstructured.Unstructured, matcher Selector) []unstructured.Unstructured {
 	filtered := []unstructured.Unstructured{}
 	for _, u := range unstructureds {
 		if !matcher.Match(u) {
