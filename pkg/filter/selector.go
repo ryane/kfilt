@@ -1,6 +1,7 @@
 package filter
 
 import (
+	"fmt"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -41,4 +42,57 @@ func (s *Selector) Match(u unstructured.Unstructured) bool {
 	}
 
 	return true
+}
+
+func NewSelector(q string) (Selector, error) {
+	m := Selector{}
+	criteria := strings.Split(q, ",")
+
+	if len(criteria) == 0 {
+		return m, newMatcherError("invalid matcher %q. query is required", q)
+	}
+
+	for _, criterion := range criteria {
+		parts := strings.Split(criterion, "=")
+		if len(parts) != 2 {
+			return m, newMatcherError("invalid matcher %q. Should be in the format %q", criterion, "key=value")
+		}
+
+		key, val := strings.ToLower(parts[0]), parts[1]
+
+		switch key {
+		case "kind", "k":
+			m.Kind = val
+		case "name", "n":
+			m.Name = val
+		default:
+			return m, newMatcherError("invalid matcher %q. key should be one of %q", criterion, validMatcherKeys())
+		}
+	}
+
+	return m, nil
+}
+
+func newMatcherError(f string, args ...interface{}) errMatcherError {
+	return errMatcherError{err: fmt.Errorf(f, args...)}
+}
+
+type errMatcherError struct {
+	err error
+}
+
+func (e errMatcherError) MatcherError() bool { return true }
+func (e errMatcherError) Error() string      { return e.err.Error() }
+
+type matcherError interface {
+	MatcherError() bool
+}
+
+func IsMatcherError(err error) bool {
+	te, ok := err.(matcherError)
+	return ok && te.MatcherError()
+}
+
+func validMatcherKeys() []string {
+	return []string{"kind", "k", "name", "n"}
 }

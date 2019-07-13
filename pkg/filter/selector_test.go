@@ -7,6 +7,72 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
+func TestNewSelector(t *testing.T) {
+	var noError = func(err error) bool { return err == nil }
+	tests := []struct {
+		query         string
+		expected      filter.Selector
+		expectedError func(err error) bool
+	}{
+		// kind
+		{
+			"kind=secret",
+			filter.Selector{Kind: "secret"},
+			noError,
+		},
+		// kind abbreviation
+		{
+			"k=secret",
+			filter.Selector{Kind: "secret"},
+			func(error) bool { return true },
+		},
+		// last kind winws
+		{
+			"kind=Secret,kind=ServiceAccount",
+			filter.Selector{Kind: "ServiceAccount"},
+			noError,
+		},
+		// name
+		{
+			"name=test",
+			filter.Selector{Name: "test"},
+			noError,
+		},
+		// name abbreviation
+		{
+			"n=test",
+			filter.Selector{Name: "test"},
+			noError,
+		},
+		// no matcher
+		{
+			"",
+			filter.Selector{},
+			filter.IsMatcherError,
+		},
+		// bad key
+		{
+			"wtf=happened",
+			filter.Selector{},
+			filter.IsMatcherError,
+		},
+	}
+
+	for _, test := range tests {
+		result, err := filter.NewSelector(test.query)
+
+		if !test.expectedError(err) {
+			t.Errorf("unexpected error %v for %q", err, test.query)
+			t.FailNow()
+		}
+
+		if result != test.expected {
+			t.Errorf("expected %#v for %s, got %v", test.expected, test.query, result)
+			t.FailNow()
+		}
+	}
+}
+
 func TestSelector(t *testing.T) {
 	tests := []struct {
 		selectors []filter.Selector // TODO: convert this to a single selector
