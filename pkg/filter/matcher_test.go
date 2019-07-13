@@ -48,13 +48,13 @@ func TestNewMatcher(t *testing.T) {
 		{
 			"",
 			filter.Matcher{},
-			filter.IsMatcherError,
+			filter.IsMatcherParseError,
 		},
 		// bad key
 		{
 			"wtf=happened",
 			filter.Matcher{},
-			filter.IsMatcherError,
+			filter.IsMatcherParseError,
 		},
 	}
 

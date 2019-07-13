@@ -1,7 +1,6 @@
 package filter
 
 import (
-	"fmt"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -49,13 +48,13 @@ func NewMatcher(q string) (Matcher, error) {
 	criteria := strings.Split(q, ",")
 
 	if len(criteria) == 0 {
-		return m, newMatcherError("invalid matcher %q. query is required", q)
+		return m, newMatcherParseError("invalid matcher %q. query is required", q)
 	}
 
 	for _, criterion := range criteria {
 		parts := strings.Split(criterion, "=")
 		if len(parts) != 2 {
-			return m, newMatcherError("invalid matcher %q. Should be in the format %q", criterion, "key=value")
+			return m, newMatcherParseError("invalid matcher %q. Should be in the format %q", criterion, "key=value")
 		}
 
 		key, val := strings.ToLower(parts[0]), parts[1]
@@ -66,31 +65,11 @@ func NewMatcher(q string) (Matcher, error) {
 		case "name", "n":
 			m.Name = val
 		default:
-			return m, newMatcherError("invalid matcher %q. key should be one of %v", criterion, validMatcherKeys())
+			return m, newMatcherParseError("invalid matcher %q. key should be one of %v", criterion, validMatcherKeys())
 		}
 	}
 
 	return m, nil
-}
-
-func newMatcherError(f string, args ...interface{}) errMatcherError {
-	return errMatcherError{err: fmt.Errorf(f, args...)}
-}
-
-type errMatcherError struct {
-	err error
-}
-
-func (e errMatcherError) MatcherError() bool { return true }
-func (e errMatcherError) Error() string      { return e.err.Error() }
-
-type matcherError interface {
-	MatcherError() bool
-}
-
-func IsMatcherError(err error) bool {
-	te, ok := err.(matcherError)
-	return ok && te.MatcherError()
 }
 
 func validMatcherKeys() []string {
