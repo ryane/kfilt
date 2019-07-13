@@ -9,7 +9,6 @@ import (
 	"github.com/ryane/kfilt/pkg/filter"
 	"github.com/ryane/kfilt/pkg/input"
 	"github.com/ryane/kfilt/pkg/printer"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +37,7 @@ func newRootCommand(args []string) *cobra.Command {
 		Long:  `kfilt can filter Kubernetes resources`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := root.run(); err != nil {
-				log.WithError(err).Error()
+				fmt.Println(err)
 				os.Exit(1)
 			}
 		},
@@ -81,24 +80,24 @@ func (r *root) run() error {
 	kfilt := filter.New()
 
 	for _, k := range r.includeKinds {
-		kfilt.AddInclude(filter.Selector{Kind: k})
+		kfilt.AddInclude(filter.Matcher{Kind: k})
 	}
 
 	for _, n := range r.includeNames {
-		kfilt.AddInclude(filter.Selector{Name: n})
+		kfilt.AddInclude(filter.Matcher{Name: n})
 	}
 
 	for _, k := range r.excludeKinds {
-		kfilt.AddExclude(filter.Selector{Kind: k})
+		kfilt.AddExclude(filter.Matcher{Kind: k})
 	}
 
 	for _, n := range r.excludeNames {
-		kfilt.AddExclude(filter.Selector{Name: n})
+		kfilt.AddExclude(filter.Matcher{Name: n})
 	}
 
 	for _, q := range r.include {
 		if q != "" {
-			s, err := filter.NewSelector(q)
+			s, err := filter.NewMatcher(q)
 			if err != nil {
 				return err
 			}
@@ -108,7 +107,7 @@ func (r *root) run() error {
 
 	for _, q := range r.exclude {
 		if q != "" {
-			s, err := filter.NewSelector(q)
+			s, err := filter.NewMatcher(q)
 			if err != nil {
 				return err
 			}
@@ -129,7 +128,7 @@ func (r *root) run() error {
 // Execute runs the root command
 func Execute(args []string) {
 	if err := newRootCommand(args).Execute(); err != nil {
-		log.WithError(err).Error()
+		fmt.Println(err)
 		os.Exit(2)
 	}
 }

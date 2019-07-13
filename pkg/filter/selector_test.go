@@ -7,59 +7,59 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-func TestNewSelector(t *testing.T) {
+func TestNewMatcher(t *testing.T) {
 	var noError = func(err error) bool { return err == nil }
 	tests := []struct {
 		query         string
-		expected      filter.Selector
+		expected      filter.Matcher
 		expectedError func(err error) bool
 	}{
 		// kind
 		{
 			"kind=secret",
-			filter.Selector{Kind: "secret"},
+			filter.Matcher{Kind: "secret"},
 			noError,
 		},
 		// kind abbreviation
 		{
 			"k=secret",
-			filter.Selector{Kind: "secret"},
+			filter.Matcher{Kind: "secret"},
 			func(error) bool { return true },
 		},
 		// last kind winws
 		{
 			"kind=Secret,kind=ServiceAccount",
-			filter.Selector{Kind: "ServiceAccount"},
+			filter.Matcher{Kind: "ServiceAccount"},
 			noError,
 		},
 		// name
 		{
 			"name=test",
-			filter.Selector{Name: "test"},
+			filter.Matcher{Name: "test"},
 			noError,
 		},
 		// name abbreviation
 		{
 			"n=test",
-			filter.Selector{Name: "test"},
+			filter.Matcher{Name: "test"},
 			noError,
 		},
 		// no matcher
 		{
 			"",
-			filter.Selector{},
+			filter.Matcher{},
 			filter.IsMatcherError,
 		},
 		// bad key
 		{
 			"wtf=happened",
-			filter.Selector{},
+			filter.Matcher{},
 			filter.IsMatcherError,
 		},
 	}
 
 	for _, test := range tests {
-		result, err := filter.NewSelector(test.query)
+		result, err := filter.NewMatcher(test.query)
 
 		if !test.expectedError(err) {
 			t.Errorf("unexpected error %v for %q", err, test.query)
@@ -73,66 +73,66 @@ func TestNewSelector(t *testing.T) {
 	}
 }
 
-func TestSelector(t *testing.T) {
+func TestMatcher(t *testing.T) {
 	tests := []struct {
-		selectors []filter.Selector // TODO: convert this to a single selector
-		resource  unstructured.Unstructured
-		expected  bool
+		matchers []filter.Matcher // TODO: convert this to a single matcher
+		resource unstructured.Unstructured
+		expected bool
 	}{
-		// empty selector should match
-		{[]filter.Selector{}, role(), true},
-		// kind selectors
+		// empty matcher should match
+		{[]filter.Matcher{}, role(), true},
+		// kind matchers
 		{
-			[]filter.Selector{
+			[]filter.Matcher{
 				{Kind: "Role"},
 			},
 			role(),
 			true,
 		},
 		{
-			[]filter.Selector{
+			[]filter.Matcher{
 				{Kind: "role"},
 			},
 			role(),
 			true,
 		},
 		{
-			[]filter.Selector{
+			[]filter.Matcher{
 				{Kind: "ServiceAccount"},
 			},
 			role(),
 			false,
 		},
 		{
-			[]filter.Selector{
+			[]filter.Matcher{
 				{Version: "v1", Kind: "ServiceAccount"},
 			},
 			serviceAccount(),
 			true,
 		},
 		{
-			[]filter.Selector{
+			[]filter.Matcher{
 				{Group: "", Version: "v1", Kind: "ServiceAccount"},
 			},
 			serviceAccount(),
 			true,
 		},
 		{
-			[]filter.Selector{
+			[]filter.Matcher{
 				{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "Role"},
 			},
 			role(),
 			true,
 		},
 		{
-			[]filter.Selector{
+			[]filter.Matcher{
 				{Group: "rbac.authorization.k8s.io", Version: "v1beta1", Kind: "Role"},
 			},
 			role(),
 			false,
 		},
 		{
-			[]filter.Selector{
+			[]filter.Matcher{
 				{
 					Group:   "rbac.authorization.k8s.io",
 					Version: "v1",
@@ -144,7 +144,7 @@ func TestSelector(t *testing.T) {
 			true,
 		},
 		{
-			[]filter.Selector{
+			[]filter.Matcher{
 				{
 					Group:   "rbac.authorization.k8s.io",
 					Version: "v1",
@@ -156,7 +156,7 @@ func TestSelector(t *testing.T) {
 			false,
 		},
 		{
-			[]filter.Selector{
+			[]filter.Matcher{
 				{
 					Group:     "rbac.authorization.k8s.io",
 					Version:   "v1",
@@ -169,7 +169,7 @@ func TestSelector(t *testing.T) {
 			true,
 		},
 		{
-			[]filter.Selector{
+			[]filter.Matcher{
 				{
 					Group:     "rbac.authorization.k8s.io",
 					Version:   "v1",
@@ -182,7 +182,7 @@ func TestSelector(t *testing.T) {
 			true,
 		},
 		{
-			[]filter.Selector{
+			[]filter.Matcher{
 				{
 					Version:   "v1",
 					Kind:      "ServiceAccount",
@@ -194,7 +194,7 @@ func TestSelector(t *testing.T) {
 			true,
 		},
 		{
-			[]filter.Selector{
+			[]filter.Matcher{
 				{
 					Version: "v1",
 					Kind:    "ServiceAccount",
@@ -205,7 +205,7 @@ func TestSelector(t *testing.T) {
 			true,
 		},
 		{
-			[]filter.Selector{
+			[]filter.Matcher{
 				{
 					Version:   "v1",
 					Kind:      "ServiceAccount",
@@ -219,9 +219,9 @@ func TestSelector(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		for _, selector := range test.selectors {
-			if result := selector.Match(test.resource); result != test.expected {
-				t.Errorf("expected %v for %v, got %v", test.expected, test.selectors, result)
+		for _, matcher := range test.matchers {
+			if result := matcher.Match(test.resource); result != test.expected {
+				t.Errorf("expected %v for %v, got %v", test.expected, test.matchers, result)
 				t.FailNow()
 			}
 		}

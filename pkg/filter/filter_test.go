@@ -8,20 +8,20 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-type excludeSelectors []filter.Selector
-type includeSelectors []filter.Selector
+type excludeMatchers []filter.Matcher
+type includeMatchers []filter.Matcher
 type expectGVKNS []string
 
 func TestFilter(t *testing.T) {
 	tests := []struct {
-		exclude     excludeSelectors
-		include     includeSelectors
+		exclude     excludeMatchers
+		include     includeMatchers
 		expectNames []string
 	}{
 		// no filters, return all
 		{
-			excludeSelectors{},
-			includeSelectors{},
+			excludeMatchers{},
+			includeMatchers{},
 			expectGVKNS{
 				"/v1:serviceaccount:test-sa",
 				"/v1:serviceaccount:test-sa-2",
@@ -33,12 +33,12 @@ func TestFilter(t *testing.T) {
 		},
 		// exclude service accounts
 		{
-			excludeSelectors{
+			excludeMatchers{
 				{
 					Kind: "ServiceAccount",
 				},
 			},
-			includeSelectors{},
+			includeMatchers{},
 			expectGVKNS{
 				"/v1:pod:test-pod",
 				"extensions/v1beta1:deployment:test-deployment",
@@ -48,7 +48,7 @@ func TestFilter(t *testing.T) {
 		},
 		// exclude service accounts and pods
 		{
-			excludeSelectors{
+			excludeMatchers{
 				{
 					Kind: "ServiceAccount",
 				},
@@ -56,7 +56,7 @@ func TestFilter(t *testing.T) {
 					Kind: "pod",
 				},
 			},
-			includeSelectors{},
+			includeMatchers{},
 			expectGVKNS{
 				"extensions/v1beta1:deployment:test-deployment",
 				"extensions/v1beta1:deployment:app",
@@ -65,13 +65,13 @@ func TestFilter(t *testing.T) {
 		},
 		// exclude deployments named "app"
 		{
-			excludeSelectors{
+			excludeMatchers{
 				{
 					Kind: "deployment",
 					Name: "app",
 				},
 			},
-			includeSelectors{},
+			includeMatchers{},
 			expectGVKNS{
 				"/v1:serviceaccount:test-sa",
 				"/v1:serviceaccount:test-sa-2",
@@ -82,8 +82,8 @@ func TestFilter(t *testing.T) {
 		},
 		// include service accounts
 		{
-			excludeSelectors{},
-			includeSelectors{
+			excludeMatchers{},
+			includeMatchers{
 				{
 					Kind: "ServiceAccount",
 				},
@@ -95,8 +95,8 @@ func TestFilter(t *testing.T) {
 		},
 		// include service accounts and pods
 		{
-			excludeSelectors{},
-			includeSelectors{
+			excludeMatchers{},
+			includeMatchers{
 				{
 					Kind: "ServiceAccount",
 				},
@@ -112,12 +112,12 @@ func TestFilter(t *testing.T) {
 		},
 		// include service accounts and pods, but drop test-sa-2
 		{
-			excludeSelectors{
+			excludeMatchers{
 				{
 					Name: "test-sa-2",
 				},
 			},
-			includeSelectors{
+			includeMatchers{
 				{
 					Kind: "ServiceAccount",
 				},

@@ -7,7 +7,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-type Selector struct {
+type Matcher struct {
 	Group     string
 	Version   string
 	Kind      string
@@ -15,7 +15,7 @@ type Selector struct {
 	Namespace string
 }
 
-func (s *Selector) Match(u unstructured.Unstructured) bool {
+func (s *Matcher) Match(u unstructured.Unstructured) bool {
 	gvk := u.GroupVersionKind()
 
 	if s.Group != "" && !strings.EqualFold(s.Group, gvk.Group) {
@@ -44,8 +44,8 @@ func (s *Selector) Match(u unstructured.Unstructured) bool {
 	return true
 }
 
-func NewSelector(q string) (Selector, error) {
-	m := Selector{}
+func NewMatcher(q string) (Matcher, error) {
+	m := Matcher{}
 	criteria := strings.Split(q, ",")
 
 	if len(criteria) == 0 {
@@ -66,7 +66,7 @@ func NewSelector(q string) (Selector, error) {
 		case "name", "n":
 			m.Name = val
 		default:
-			return m, newMatcherError("invalid matcher %q. key should be one of %q", criterion, validMatcherKeys())
+			return m, newMatcherError("invalid matcher %q. key should be one of %v", criterion, validMatcherKeys())
 		}
 	}
 
