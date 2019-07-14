@@ -64,6 +64,12 @@ func NewMatcher(q string) (Matcher, error) {
 			m.Kind = val
 		case "name", "n":
 			m.Name = val
+		case "group", "g":
+			m.Group = val
+		case "version", "v":
+			m.Version = val
+		case "namespace", "ns":
+			m.Namespace = val
 		default:
 			return m, newMatcherParseError("invalid matcher %q. key should be one of %v", criterion, validMatcherKeys())
 		}
@@ -73,5 +79,11 @@ func NewMatcher(q string) (Matcher, error) {
 }
 
 func validMatcherKeys() []string {
-	return []string{"kind", "k", "name", "n"}
+	return []string{
+		"kind", "k",
+		"name", "n",
+		"group", "g",
+		"version", "v",
+		"namespace", "ns",
+	}
 }
