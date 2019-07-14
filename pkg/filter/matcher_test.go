@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/ryane/kfilt/pkg/filter"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"github.com/ryane/kfilt/pkg/resource"
 )
 
 func TestNewMatcher(t *testing.T) {
@@ -75,143 +75,129 @@ func TestNewMatcher(t *testing.T) {
 
 func TestMatcher(t *testing.T) {
 	tests := []struct {
-		matchers []filter.Matcher // TODO: convert this to a single matcher
-		resource unstructured.Unstructured
+		matcher  filter.Matcher
+		resource resource.Resource
 		expected bool
 	}{
 		// empty matcher should match
-		{[]filter.Matcher{}, role(), true},
+		{filter.Matcher{}, role(), true},
 		// kind matchers
 		{
-			[]filter.Matcher{
-				{Kind: "Role"},
+			filter.Matcher{
+				Kind: "Role",
 			},
 			role(),
 			true,
 		},
 		{
-			[]filter.Matcher{
-				{Kind: "role"},
+			filter.Matcher{
+				Kind: "role",
 			},
 			role(),
 			true,
 		},
 		{
-			[]filter.Matcher{
-				{Kind: "ServiceAccount"},
-			},
-			role(),
-			false,
-		},
-		{
-			[]filter.Matcher{
-				{Version: "v1", Kind: "ServiceAccount"},
-			},
-			serviceAccount(),
-			true,
-		},
-		{
-			[]filter.Matcher{
-				{Group: "", Version: "v1", Kind: "ServiceAccount"},
-			},
-			serviceAccount(),
-			true,
-		},
-		{
-			[]filter.Matcher{
-				{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "Role"},
-			},
-			role(),
-			true,
-		},
-		{
-			[]filter.Matcher{
-				{Group: "rbac.authorization.k8s.io", Version: "v1beta1", Kind: "Role"},
+			filter.Matcher{
+				Kind: "ServiceAccount",
 			},
 			role(),
 			false,
 		},
 		{
-			[]filter.Matcher{
-				{
-					Group:   "rbac.authorization.k8s.io",
-					Version: "v1",
-					Kind:    "Role",
-					Name:    "test-role",
-				},
+			filter.Matcher{
+				Version: "v1", Kind: "ServiceAccount",
+			},
+			serviceAccount(),
+			true,
+		},
+		{
+			filter.Matcher{
+				Group: "", Version: "v1", Kind: "ServiceAccount",
+			},
+			serviceAccount(),
+			true,
+		},
+		{
+			filter.Matcher{
+				Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "Role",
 			},
 			role(),
 			true,
 		},
 		{
-			[]filter.Matcher{
-				{
-					Group:   "rbac.authorization.k8s.io",
-					Version: "v1",
-					Kind:    "Role",
-					Name:    "test-sa",
-				},
+			filter.Matcher{
+				Group: "rbac.authorization.k8s.io", Version: "v1beta1", Kind: "Role",
 			},
 			role(),
 			false,
 		},
 		{
-			[]filter.Matcher{
-				{
-					Group:     "rbac.authorization.k8s.io",
-					Version:   "v1",
-					Kind:      "Role",
-					Name:      "test-role",
-					Namespace: "",
-				},
+			filter.Matcher{
+				Group:   "rbac.authorization.k8s.io",
+				Version: "v1",
+				Kind:    "Role",
+				Name:    "test-role",
 			},
 			role(),
 			true,
 		},
 		{
-			[]filter.Matcher{
-				{
-					Group:     "rbac.authorization.k8s.io",
-					Version:   "v1",
-					Kind:      "Role",
-					Name:      "test-role",
-					Namespace: "default",
-				},
+			filter.Matcher{
+				Group:   "rbac.authorization.k8s.io",
+				Version: "v1",
+				Kind:    "Role",
+				Name:    "test-sa",
+			},
+			role(),
+			false,
+		},
+		{
+			filter.Matcher{
+				Group:     "rbac.authorization.k8s.io",
+				Version:   "v1",
+				Kind:      "Role",
+				Name:      "test-role",
+				Namespace: "",
 			},
 			role(),
 			true,
 		},
 		{
-			[]filter.Matcher{
-				{
-					Version:   "v1",
-					Kind:      "ServiceAccount",
-					Name:      "test-sa",
-					Namespace: "monitoring",
-				},
+			filter.Matcher{
+				Group:     "rbac.authorization.k8s.io",
+				Version:   "v1",
+				Kind:      "Role",
+				Name:      "test-role",
+				Namespace: "default",
+			},
+			role(),
+			true,
+		},
+		{
+			filter.Matcher{
+				Version:   "v1",
+				Kind:      "ServiceAccount",
+				Name:      "test-sa",
+				Namespace: "monitoring",
 			},
 			serviceAccount(),
 			true,
 		},
 		{
-			[]filter.Matcher{
-				{
-					Version: "v1",
-					Kind:    "ServiceAccount",
-					Name:    "test-sa",
-				},
+			filter.Matcher{
+				Version: "v1",
+				Kind:    "ServiceAccount",
+				Name:    "test-sa",
 			},
 			serviceAccount(),
 			true,
 		},
 		{
-			[]filter.Matcher{
-				{
-					Version:   "v1",
-					Kind:      "ServiceAccount",
-					Name:      "test-sa",
-					Namespace: "default",
-				},
+			filter.Matcher{
+				Version:   "v1",
+				Kind:      "ServiceAccount",
+				Name:      "test-sa",
+				Namespace: "default",
 			},
 			serviceAccount(),
 			false,
@@ -219,30 +205,28 @@ func TestMatcher(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		for _, matcher := range test.matchers {
-			if result := matcher.Match(test.resource); result != test.expected {
-				t.Errorf("expected %v for %v, got %v", test.expected, test.matchers, result)
-				t.FailNow()
-			}
+		if result := test.matcher.Match(test.resource); result != test.expected {
+			t.Errorf("expected %v for %v, got %v", test.expected, test.matcher, result)
+			t.FailNow()
 		}
 	}
 }
 
-func role() unstructured.Unstructured {
-	return unstructured.Unstructured{
-		Object: map[string]interface{}{
+func role() resource.Resource {
+	return resource.New(
+		map[string]interface{}{
 			"apiVersion": "rbac.authorization.k8s.io/v1",
 			"kind":       "Role",
 			"metadata": map[string]interface{}{
 				"name": "test-role",
 			},
 		},
-	}
+	)
 }
 
-func serviceAccount() unstructured.Unstructured {
-	return unstructured.Unstructured{
-		Object: map[string]interface{}{
+func serviceAccount() resource.Resource {
+	return resource.New(
+		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ServiceAccount",
 			"metadata": map[string]interface{}{
@@ -250,5 +234,5 @@ func serviceAccount() unstructured.Unstructured {
 				"namespace": "monitoring",
 			},
 		},
-	}
+	)
 }

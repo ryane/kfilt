@@ -3,7 +3,7 @@ package filter
 import (
 	"strings"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"github.com/ryane/kfilt/pkg/resource"
 )
 
 type Matcher struct {
@@ -14,8 +14,8 @@ type Matcher struct {
 	Namespace string
 }
 
-func (s *Matcher) Match(u unstructured.Unstructured) bool {
-	gvk := u.GroupVersionKind()
+func (s *Matcher) Match(r resource.Resource) bool {
+	gvk := r.GroupVersionKind()
 
 	if s.Group != "" && !strings.EqualFold(s.Group, gvk.Group) {
 		return false
@@ -26,11 +26,11 @@ func (s *Matcher) Match(u unstructured.Unstructured) bool {
 	if s.Kind != "" && !strings.EqualFold(s.Kind, gvk.Kind) {
 		return false
 	}
-	if s.Name != "" && !strings.EqualFold(s.Name, u.GetName()) {
+	if s.Name != "" && !strings.EqualFold(s.Name, r.GetName()) {
 		return false
 	}
 	if s.Namespace != "" {
-		ns := u.GetNamespace()
+		ns := r.GetNamespace()
 		if strings.ToLower(s.Namespace) == "default" {
 			if ns != "" && !strings.EqualFold(s.Namespace, ns) {
 				return false

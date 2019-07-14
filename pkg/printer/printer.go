@@ -2,13 +2,14 @@ package printer
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
+	"github.com/ryane/kfilt/pkg/resource"
 	yaml "gopkg.in/yaml.v2"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 type Printer interface {
-	Print([]unstructured.Unstructured) error
+	Print([]resource.Resource) error
 }
 
 type consolePrinter struct{}
@@ -17,17 +18,17 @@ func New() Printer {
 	return &consolePrinter{}
 }
 
-func (p *consolePrinter) Print(unstructureds []unstructured.Unstructured) error {
-	for _, u := range unstructureds {
-		if err := p.printUnstructured(u); err != nil {
+func (p *consolePrinter) Print(resources []resource.Resource) error {
+	for _, r := range resources {
+		if err := p.printResource(r); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (p *consolePrinter) printUnstructured(u unstructured.Unstructured) error {
-	data, err := yaml.Marshal(u.Object)
+func (p *consolePrinter) printResource(r resource.Resource) error {
+	data, err := yaml.Marshal(r.Object)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal yaml")
 	}

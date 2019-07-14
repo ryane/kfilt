@@ -33,8 +33,8 @@ func TestDecoder(t *testing.T) {
 	}
 
 	expectNames := []string{"test", "test2", "example-config", "cluster-specification", "handler"}
-	for i, u := range results {
-		name := u.GetName()
+	for i, res := range results {
+		name := res.GetName()
 		if name != expectNames[i] {
 			t.Errorf("expected %s, got %s", expectNames[i], name)
 			t.FailNow()
@@ -42,8 +42,8 @@ func TestDecoder(t *testing.T) {
 	}
 
 	expectKinds := []string{"ServiceAccount", "ServiceAccount", "ConfigMap", "ClusterSpec", "stdio"}
-	for i, u := range results {
-		kind := u.GetKind()
+	for i, res := range results {
+		kind := res.GetKind()
 		if kind != expectKinds[i] {
 			t.Errorf("expected %s, got %s", expectKinds[i], kind)
 			t.FailNow()

@@ -4,12 +4,12 @@ import (
 	"io"
 
 	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"github.com/ryane/kfilt/pkg/resource"
 	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
 )
 
 type Decoder interface {
-	Decode(io.Reader) ([]unstructured.Unstructured, error)
+	Decode(io.Reader) ([]resource.Resource, error)
 }
 
 type kubernetesDecoder struct{}
@@ -18,16 +18,16 @@ func New() Decoder {
 	return &kubernetesDecoder{}
 }
 
-func (k *kubernetesDecoder) Decode(in io.Reader) ([]unstructured.Unstructured, error) {
+func (k *kubernetesDecoder) Decode(in io.Reader) ([]resource.Resource, error) {
 	var (
-		result []unstructured.Unstructured
+		result []resource.Resource
 		err    error
 	)
 
 	decoder := k8syaml.NewYAMLOrJSONDecoder(in, 1024)
 
 	for err == nil {
-		var out unstructured.Unstructured
+		var out resource.Resource
 		err = decoder.Decode(&out)
 		if err == nil && len(out.Object) > 0 {
 			result = append(result, out)

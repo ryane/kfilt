@@ -1,30 +1,28 @@
 package filter_test
 
-import (
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-)
+import "github.com/ryane/kfilt/pkg/resource"
 
-var input = []unstructured.Unstructured{
-	{
-		Object: map[string]interface{}{
+var input = []resource.Resource{
+	resource.New(
+		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ServiceAccount",
 			"metadata": map[string]interface{}{
 				"name": "test-sa",
 			},
 		},
-	},
-	{
-		Object: map[string]interface{}{
+	),
+	resource.New(
+		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ServiceAccount",
 			"metadata": map[string]interface{}{
 				"name": "test-sa-2",
 			},
 		},
-	},
-	{
-		Object: map[string]interface{}{
+	),
+	resource.New(
+		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "Pod",
 			"metadata": map[string]interface{}{
@@ -32,9 +30,9 @@ var input = []unstructured.Unstructured{
 				"namespace": "test-ns",
 			},
 		},
-	},
-	{
-		Object: map[string]interface{}{
+	),
+	resource.New(
+		map[string]interface{}{
 			"apiVersion": "extensions/v1beta1",
 			"kind":       "Deployment",
 			"metadata": map[string]interface{}{
@@ -42,9 +40,9 @@ var input = []unstructured.Unstructured{
 				"namespace": "test-ns",
 			},
 		},
-	},
-	{
-		Object: map[string]interface{}{
+	),
+	resource.New(
+		map[string]interface{}{
 			"apiVersion": "extensions/v1beta1",
 			"kind":       "Deployment",
 			"metadata": map[string]interface{}{
@@ -52,9 +50,9 @@ var input = []unstructured.Unstructured{
 				"namespace": "app",
 			},
 		},
-	},
-	{
-		Object: map[string]interface{}{
+	),
+	resource.New(
+		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
 			"metadata": map[string]interface{}{
@@ -62,5 +60,5 @@ var input = []unstructured.Unstructured{
 				"namespace": "app",
 			},
 		},
-	},
+	),
 }

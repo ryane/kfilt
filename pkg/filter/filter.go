@@ -1,9 +1,7 @@
 package filter
 
 import (
-	"strings"
-
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"github.com/ryane/kfilt/pkg/resource"
 )
 
 type Filter struct {
@@ -18,16 +16,8 @@ func New() *Filter {
 	}
 }
 
-// TODO: move me to Resource.ID()?
-func resourceID(u unstructured.Unstructured) string {
-	gvk := u.GroupVersionKind()
-	return strings.ToLower(
-		gvk.Group + "/" + gvk.Version + ":" + gvk.Kind + ":" + u.GetNamespace() + ":" + u.GetName(),
-	)
-}
-
-func (f *Filter) Filter(unstructureds []unstructured.Unstructured) []unstructured.Unstructured {
-	filtered := append([]unstructured.Unstructured{}, unstructureds...)
+func (f *Filter) Filter(resources []resource.Resource) []resource.Resource {
+	filtered := append([]resource.Resource{}, resources...)
 
 	// excludes
 	for _, matcher := range f.Exclude {
@@ -37,10 +27,10 @@ func (f *Filter) Filter(unstructureds []unstructured.Unstructured) []unstructure
 	// includes
 	if len(f.Include) > 0 {
 		includeMap := make(map[string]interface{})
-		included := []unstructured.Unstructured{}
+		included := []resource.Resource{}
 		for _, matcher := range f.Include {
 			for _, match := range filter(filtered, matcher) {
-				matchID := resourceID(match)
+				matchID := match.ID()
 				if _, ok := includeMap[matchID]; !ok {
 					includeMap[matchID] = struct{}{}
 					included = append(included, match)
@@ -61,21 +51,21 @@ func (f *Filter) AddExclude(s Matcher) {
 	f.Exclude = append(f.Exclude, s)
 }
 
-func filter(unstructureds []unstructured.Unstructured, matcher Matcher) []unstructured.Unstructured {
-	filtered := []unstructured.Unstructured{}
-	for _, u := range unstructureds {
-		if matcher.Match(u) {
-			filtered = append(filtered, u)
+func filter(resources []resource.Resource, matcher Matcher) []resource.Resource {
+	filtered := []resource.Resource{}
+	for _, r := range resources {
+		if matcher.Match(r) {
+			filtered = append(filtered, r)
 		}
 	}
 	return filtered
 }
 
-func exclude(unstructureds []unstructured.Unstructured, matcher Matcher) []unstructured.Unstructured {
-	filtered := []unstructured.Unstructured{}
-	for _, u := range unstructureds {
-		if !matcher.Match(u) {
-			filtered = append(filtered, u)
+func exclude(resources []resource.Resource, matcher Matcher) []resource.Resource {
+	filtered := []resource.Resource{}
+	for _, r := range resources {
+		if !matcher.Match(r) {
+			filtered = append(filtered, r)
 		}
 	}
 	return filtered
