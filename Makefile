@@ -11,6 +11,10 @@ build:
 
 .PHONY: test
 test:
+	go test ./...
+
+.PHONY: testv
+testv:
 	go test -v ./...
 
 .PHONY: docker

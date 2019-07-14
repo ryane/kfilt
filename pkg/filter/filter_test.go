@@ -4,128 +4,172 @@ import (
 	"testing"
 
 	"github.com/ryane/kfilt/pkg/filter"
+	"github.com/ryane/kfilt/pkg/resource"
 )
 
-type includeNames []string
-type includeKinds []string
-type excludeNames []string
-type excludeKinds []string
-type expectNames []string
+type excludeMatchers []filter.Matcher
+type includeMatchers []filter.Matcher
+type expectIDs []string
 
 func TestFilter(t *testing.T) {
 	tests := []struct {
-		includeKinds includeKinds
-		includeNames includeNames
-		excludeKinds excludeKinds
-		excludeNames excludeNames
-		expectNames  []string
+		exclude excludeMatchers
+		include includeMatchers
+		expectIDs
 	}{
+		// no filters, return all
 		{
-			includeKinds{"Deployment", "Pod"},
-			includeNames{},
-			excludeKinds{},
-			excludeNames{},
-			expectNames{"test-pod", "test-deployment"},
+			excludeMatchers{},
+			includeMatchers{},
+			expectIDs{
+				"/v1:serviceaccount::test-sa",
+				"/v1:serviceaccount::test-sa-2",
+				"/v1:pod:test-ns:test-pod",
+				"extensions/v1beta1:deployment:test-ns:test-deployment",
+				"extensions/v1beta1:deployment:app:app",
+				"/v1:configmap:app:app",
+			},
 		},
+		// exclude service accounts
 		{
-			includeKinds{"Deployment"},
-			includeNames{"test-sa"},
-			excludeKinds{},
-			excludeNames{},
-			expectNames{},
+			excludeMatchers{
+				{
+					Kind: "ServiceAccount",
+				},
+			},
+			includeMatchers{},
+			expectIDs{
+				"/v1:pod:test-ns:test-pod",
+				"extensions/v1beta1:deployment:test-ns:test-deployment",
+				"extensions/v1beta1:deployment:app:app",
+				"/v1:configmap:app:app",
+			},
 		},
+		// exclude service accounts and pods
 		{
-			includeKinds{},
-			includeNames{"test-sa"},
-			excludeKinds{},
-			excludeNames{},
-			expectNames{"test-sa"},
+			excludeMatchers{
+				{
+					Kind: "ServiceAccount",
+				},
+				{
+					Kind: "pod",
+				},
+			},
+			includeMatchers{},
+			expectIDs{
+				"extensions/v1beta1:deployment:test-ns:test-deployment",
+				"extensions/v1beta1:deployment:app:app",
+				"/v1:configmap:app:app",
+			},
 		},
+		// exclude deployments named "app"
 		{
-			includeKinds{},
-			includeNames{"test-sa", "test-sa-2"},
-			excludeKinds{},
-			excludeNames{},
-			expectNames{"test-sa", "test-sa-2"},
+			excludeMatchers{
+				{
+					Kind: "deployment",
+					Name: "app",
+				},
+			},
+			includeMatchers{},
+			expectIDs{
+				"/v1:serviceaccount::test-sa",
+				"/v1:serviceaccount::test-sa-2",
+				"/v1:pod:test-ns:test-pod",
+				"extensions/v1beta1:deployment:test-ns:test-deployment",
+				"/v1:configmap:app:app",
+			},
 		},
+		// include service accounts
 		{
-			includeKinds{""},
-			includeNames{"test-sa"},
-			excludeKinds{},
-			excludeNames{},
-			expectNames{"test-sa"},
+			excludeMatchers{},
+			includeMatchers{
+				{
+					Kind: "ServiceAccount",
+				},
+			},
+			expectIDs{
+				"/v1:serviceaccount::test-sa",
+				"/v1:serviceaccount::test-sa-2",
+			},
 		},
+		// include service accounts and pods
 		{
-			includeKinds{"ServiceAccount"},
-			includeNames{},
-			excludeKinds{},
-			excludeNames{},
-			expectNames{"test-sa", "test-sa-2"},
+			excludeMatchers{},
+			includeMatchers{
+				{
+					Kind: "ServiceAccount",
+				},
+				{
+					Kind: "pod",
+				},
+			},
+			expectIDs{
+				"/v1:serviceaccount::test-sa",
+				"/v1:serviceaccount::test-sa-2",
+				"/v1:pod:test-ns:test-pod",
+			},
 		},
+		// include service accounts and pods, but drop test-sa-2
 		{
-			includeKinds{"ServiceAccount"},
-			includeNames{"test-pod", "test-deployment"},
-			excludeKinds{},
-			excludeNames{},
-			expectNames{},
+			excludeMatchers{
+				{
+					Name: "test-sa-2",
+				},
+			},
+			includeMatchers{
+				{
+					Kind: "ServiceAccount",
+				},
+				{
+					Kind: "pod",
+				},
+			},
+			expectIDs{
+				"/v1:serviceaccount::test-sa",
+				"/v1:pod:test-ns:test-pod",
+			},
 		},
+		// don't include duplicate resources
 		{
-			includeKinds{"ServiceAccount"},
-			includeNames{},
-			excludeKinds{},
-			excludeNames{"test-sa"},
-			expectNames{"test-sa-2"},
-		},
-		{
-			includeKinds{},
-			includeNames{},
-			excludeKinds{"ServiceAccount"},
-			excludeNames{},
-			expectNames{"test-pod", "test-deployment"},
-		},
-		{
-			includeKinds{},
-			includeNames{},
-			excludeKinds{"ServiceAccount", "Deployment"},
-			excludeNames{},
-			expectNames{"test-pod"},
-		},
-		{
-			includeKinds{"ServiceAccount", "Deployment"},
-			includeNames{},
-			excludeKinds{"ServiceAccount"},
-			excludeNames{},
-			expectNames{"test-deployment"},
-		},
-		{
-			includeKinds{},
-			includeNames{"test-sa", "test-sa-2"},
-			excludeKinds{"ServiceAccount"},
-			excludeNames{},
-			expectNames{},
+			excludeMatchers{},
+			includeMatchers{
+				{
+					Kind: "ServiceAccount",
+				},
+				{
+					Name: "test-sa-2",
+				},
+			},
+			expectIDs{
+				"/v1:serviceaccount::test-sa",
+				"/v1:serviceaccount::test-sa-2",
+			},
 		},
 	}
 
 	for _, test := range tests {
-		f := filter.New(
-			filter.ExcludeNameFilter(test.excludeNames...),
-			filter.ExcludeKindFilter(test.excludeKinds...),
-			filter.NameFilter(test.includeNames...),
-			filter.KindFilter(test.includeKinds...),
-		)
+		f := &filter.Filter{test.include, test.exclude}
 
 		results := f.Filter(input)
-		if len(results) != len(test.expectNames) {
-			t.Errorf("expected %d results, got %d", len(test.expectNames), len(results))
+		if len(results) != len(test.expectIDs) {
+			t.Errorf("expected %d results, got %d\nincludes: %+v, excludes: %+v\nresults: %v", len(test.expectIDs), len(results), f.Include, f.Exclude, resourceIDs(results))
 			t.FailNow()
 		}
 
-		for i, u := range results {
-			name := u.GetName()
-			if name != test.expectNames[i] {
-				t.Errorf("expected %s, got %s", test.expectNames[i], name)
+		for i, res := range results {
+			id := res.ID()
+			if id != test.expectIDs[i] {
+				t.Errorf("expected %s, got %s\nincludes: %v, excludes: %v", test.expectIDs[i], id, f.Include, f.Exclude)
 				t.FailNow()
 			}
 		}
 	}
+}
+
+func resourceIDs(resources []resource.Resource) []string {
+	ids := make([]string, len(resources))
+	for i, res := range resources {
+		ids[i] = res.ID()
+	}
+	return ids
 }

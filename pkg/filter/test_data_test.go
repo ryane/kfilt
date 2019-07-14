@@ -1,40 +1,64 @@
 package filter_test
 
-import (
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-)
+import "github.com/ryane/kfilt/pkg/resource"
 
-var input = []unstructured.Unstructured{
-	{
-		Object: map[string]interface{}{
-			"kind": "ServiceAccount",
+var input = []resource.Resource{
+	resource.New(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ServiceAccount",
 			"metadata": map[string]interface{}{
 				"name": "test-sa",
 			},
 		},
-	},
-	{
-		Object: map[string]interface{}{
-			"kind": "ServiceAccount",
+	),
+	resource.New(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ServiceAccount",
 			"metadata": map[string]interface{}{
 				"name": "test-sa-2",
 			},
 		},
-	},
-	{
-		Object: map[string]interface{}{
-			"kind": "Pod",
+	),
+	resource.New(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Pod",
 			"metadata": map[string]interface{}{
-				"name": "test-pod",
+				"name":      "test-pod",
+				"namespace": "test-ns",
 			},
 		},
-	},
-	{
-		Object: map[string]interface{}{
-			"kind": "Deployment",
+	),
+	resource.New(
+		map[string]interface{}{
+			"apiVersion": "extensions/v1beta1",
+			"kind":       "Deployment",
 			"metadata": map[string]interface{}{
-				"name": "test-deployment",
+				"name":      "test-deployment",
+				"namespace": "test-ns",
 			},
 		},
-	},
+	),
+	resource.New(
+		map[string]interface{}{
+			"apiVersion": "extensions/v1beta1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name":      "app",
+				"namespace": "app",
+			},
+		},
+	),
+	resource.New(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name":      "app",
+				"namespace": "app",
+			},
+		},
+	),
 }

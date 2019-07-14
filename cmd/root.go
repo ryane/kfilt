@@ -9,7 +9,6 @@ import (
 	"github.com/ryane/kfilt/pkg/filter"
 	"github.com/ryane/kfilt/pkg/input"
 	"github.com/ryane/kfilt/pkg/printer"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -25,6 +24,8 @@ type root struct {
 	includeNames []string
 	excludeKinds []string
 	excludeNames []string
+	include      []string
+	exclude      []string
 	filename     string
 }
 
@@ -36,7 +37,7 @@ func newRootCommand(args []string) *cobra.Command {
 		Long:  `kfilt can filter Kubernetes resources`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := root.run(); err != nil {
-				log.WithError(err).Error()
+				fmt.Println(err)
 				os.Exit(1)
 			}
 		},
@@ -49,6 +50,8 @@ func newRootCommand(args []string) *cobra.Command {
 	rootCmd.Flags().StringSliceVarP(&root.includeNames, "name", "n", []string{}, "Only include resources with name")
 	rootCmd.Flags().StringSliceVarP(&root.excludeKinds, "exclude-kind", "K", []string{}, "Exclude resources of kind")
 	rootCmd.Flags().StringSliceVarP(&root.excludeNames, "exclude-name", "N", []string{}, "Exclude resources with name")
+	rootCmd.Flags().StringArrayVarP(&root.include, "include", "i", []string{}, "Include resources matching criteria")
+	rootCmd.Flags().StringArrayVarP(&root.exclude, "exclude", "x", []string{}, "Exclude resources matching criteria")
 	rootCmd.Flags().StringVarP(&root.filename, "filename", "f", "", "Read manifests from file")
 
 	rootCmd.SetVersionTemplate(`{{.Version}}`)
@@ -74,15 +77,45 @@ func (r *root) run() error {
 	}
 
 	// filter
-	filters := []filter.Filter{}
-	filters = append(
-		filters,
-		filter.ExcludeNameFilter(r.excludeNames...),
-		filter.ExcludeKindFilter(r.excludeKinds...),
-		filter.NameFilter(r.includeNames...),
-		filter.KindFilter(r.includeKinds...),
-	)
-	filtered := filter.New(filters...).Filter(results)
+	kfilt := filter.New()
+
+	for _, k := range r.includeKinds {
+		kfilt.AddInclude(filter.Matcher{Kind: k})
+	}
+
+	for _, n := range r.includeNames {
+		kfilt.AddInclude(filter.Matcher{Name: n})
+	}
+
+	for _, k := range r.excludeKinds {
+		kfilt.AddExclude(filter.Matcher{Kind: k})
+	}
+
+	for _, n := range r.excludeNames {
+		kfilt.AddExclude(filter.Matcher{Name: n})
+	}
+
+	for _, q := range r.include {
+		if q != "" {
+			s, err := filter.NewMatcher(q)
+			if err != nil {
+				return err
+			}
+			kfilt.AddInclude(s)
+		}
+	}
+
+	for _, q := range r.exclude {
+		if q != "" {
+			s, err := filter.NewMatcher(q)
+			if err != nil {
+				return err
+			}
+			kfilt.AddExclude(s)
+		}
+	}
+
+	filtered := kfilt.Filter(results)
 
 	// print
 	if err := printer.New().Print(filtered); err != nil {
@@ -95,7 +128,7 @@ func (r *root) run() error {
 // Execute runs the root command
 func Execute(args []string) {
 	if err := newRootCommand(args).Execute(); err != nil {
-		log.WithError(err).Error()
+		fmt.Println(err)
 		os.Exit(2)
 	}
 }
