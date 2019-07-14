@@ -1,6 +1,10 @@
 package filter
 
-import "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+import (
+	"strings"
+
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+)
 
 type Filter struct {
 	Include []Matcher
@@ -14,6 +18,14 @@ func New() *Filter {
 	}
 }
 
+// TODO: move me to Resource.ID()?
+func resourceID(u unstructured.Unstructured) string {
+	gvk := u.GroupVersionKind()
+	return strings.ToLower(
+		gvk.Group + "/" + gvk.Version + ":" + gvk.Kind + ":" + u.GetNamespace() + ":" + u.GetName(),
+	)
+}
+
 func (f *Filter) Filter(unstructureds []unstructured.Unstructured) []unstructured.Unstructured {
 	filtered := append([]unstructured.Unstructured{}, unstructureds...)
 
@@ -24,9 +36,16 @@ func (f *Filter) Filter(unstructureds []unstructured.Unstructured) []unstructure
 
 	// includes
 	if len(f.Include) > 0 {
+		includeMap := make(map[string]interface{})
 		included := []unstructured.Unstructured{}
 		for _, matcher := range f.Include {
-			included = append(included, filter(filtered, matcher)...)
+			for _, match := range filter(filtered, matcher) {
+				matchID := resourceID(match)
+				if _, ok := includeMap[matchID]; !ok {
+					includeMap[matchID] = struct{}{}
+					included = append(included, match)
+				}
+			}
 		}
 		filtered = included
 	}

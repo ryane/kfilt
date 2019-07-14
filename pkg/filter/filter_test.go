@@ -130,6 +130,22 @@ func TestFilter(t *testing.T) {
 				"/v1:pod:test-pod",
 			},
 		},
+		// don't include duplicate resources
+		{
+			excludeMatchers{},
+			includeMatchers{
+				{
+					Kind: "ServiceAccount",
+				},
+				{
+					Name: "test-sa-2",
+				},
+			},
+			expectGVKNS{
+				"/v1:serviceaccount:test-sa",
+				"/v1:serviceaccount:test-sa-2",
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -137,7 +153,7 @@ func TestFilter(t *testing.T) {
 
 		results := f.Filter(input)
 		if len(results) != len(test.expectNames) {
-			t.Errorf("expected %d results, got %d\nincludes: %v, excludes: %v", len(test.expectNames), len(results), f.Include, f.Exclude)
+			t.Errorf("expected %d results, got %d\nincludes: %+v, excludes: %+v\nresults: %v", len(test.expectNames), len(results), f.Include, f.Exclude, gvkns(results))
 			t.FailNow()
 		}
 
@@ -151,9 +167,19 @@ func TestFilter(t *testing.T) {
 	}
 }
 
+// TODO: remove me? add to Resource
 func gvkn(u unstructured.Unstructured) string {
 	gvk := u.GroupVersionKind()
 	return strings.ToLower(
 		gvk.Group + "/" + gvk.Version + ":" + gvk.Kind + ":" + u.GetName(),
 	)
+}
+
+// TODO: remove me? add to Resource
+func gvkns(unstructureds []unstructured.Unstructured) []string {
+	gvkns := make([]string, len(unstructureds))
+	for i, u := range unstructureds {
+		gvkns[i] = gvkn(u)
+	}
+	return gvkns
 }
