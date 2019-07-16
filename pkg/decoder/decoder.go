@@ -30,7 +30,16 @@ func (k *kubernetesDecoder) Decode(in io.Reader) ([]resource.Resource, error) {
 		var out resource.Resource
 		err = decoder.Decode(&out)
 		if err == nil && len(out.Object) > 0 {
-			result = append(result, out)
+			if out.IsList() {
+				items, err := out.ToList()
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to explode list")
+				}
+				result = append(result, items...)
+
+			} else {
+				result = append(result, out)
+			}
 		}
 	}
 	if err != io.EOF {
