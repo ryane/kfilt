@@ -52,7 +52,7 @@ func newRootCommand(args []string) *cobra.Command {
 	rootCmd.Flags().StringSliceVarP(&root.excludeNames, "exclude-name", "N", []string{}, "Exclude resources with name")
 	rootCmd.Flags().StringArrayVarP(&root.include, "include", "i", []string{}, "Include resources matching criteria")
 	rootCmd.Flags().StringArrayVarP(&root.exclude, "exclude", "x", []string{}, "Exclude resources matching criteria")
-	rootCmd.Flags().StringVarP(&root.filename, "filename", "f", "", "Read manifests from file")
+	rootCmd.Flags().StringVarP(&root.filename, "filename", "f", "", "Read manifests from file or URL")
 
 	rootCmd.SetVersionTemplate(`{{.Version}}`)
 
