@@ -67,7 +67,7 @@ kustomize build github.com/kubernetes-sigs/kustomize//examples/helloWorld | kfil
 Find all resources named "nginx-ingress-controller" regardless of kind.
 
 ```
-kubectl get all -A -oyaml | ./kfilt -i name=nginx-ingress-controller
+kubectl get all -A -oyaml | kfilt -i name=nginx-ingress-controller
 ```
 
 ## Installation
@@ -167,7 +167,7 @@ kfilt -f ./pkg/decoder/test.yaml -k configmap -k serviceaccount
 #### Exclude resources named "test"
 
 ```
-./kfilt -f ./pkg/decoder/test.yaml -N test
+kfilt -f ./pkg/decoder/test.yaml -N test
 ```
 
 ---
