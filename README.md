@@ -82,6 +82,10 @@ You can also run kfilt as a Docker container. Make sure you include `-i` in your
 kustomize build base | docker run --rm -i ryane/kfilt -k ConfigMap
 ```
 
+### Running as a Kustomize Plugin (experimental)
+
+See [plugin/kustomize](./plugin/kustomize) for an experimental Kustomize plugin.
+
 ## Usage
 
 ### Including Resources

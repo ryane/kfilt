@@ -1,0 +1,8 @@
+apiVersion: ryane/v1beta1
+kind: Kfilter
+metadata:
+  name: kfilt
+excludes:
+- kind: Secret
+# you can also specify includes
+# includes: []
