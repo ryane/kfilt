@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/ryane/kfilt/pkg/filter"
 	"github.com/ryane/kfilt/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
@@ -52,7 +50,6 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 	// copy kustomize resources into kfilt resources
 	resources := make([]resource.Resource, m.Size())
 	for i, res := range m.Resources() {
-		log.Printf("resid: %s", res.CurId())
 		resources[i] = resource.New(res.Map())
 	}
 
