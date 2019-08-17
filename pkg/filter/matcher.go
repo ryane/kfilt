@@ -1,19 +1,26 @@
 package filter
 
 import (
+	"log"
 	"strings"
 
 	"github.com/ryane/kfilt/pkg/resource"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
+// Matcher represents match criteria
 type Matcher struct {
-	Group     string
-	Version   string
-	Kind      string
-	Name      string
-	Namespace string
+	Group         string
+	Version       string
+	Kind          string
+	Name          string
+	Namespace     string
+	LabelSelector string
+
+	labelSelector labels.Selector // parsed LabelSelector
 }
 
+// Match returns true if a Resource matches the criteria
 func (s *Matcher) Match(r resource.Resource) bool {
 	gvk := r.GroupVersionKind()
 
@@ -40,9 +47,26 @@ func (s *Matcher) Match(r resource.Resource) bool {
 		}
 	}
 
+	if s.LabelSelector != "" {
+		selector, err := labels.Parse(s.LabelSelector)
+		// TODO: fix this
+		if err != nil {
+			log.Fatal(err)
+		}
+		labelSet := labels.Set{}
+		for name, val := range r.GetLabels() {
+			labelSet[name] = val
+		}
+
+		if !selector.Matches(labelSet) {
+			return false
+		}
+	}
+
 	return true
 }
 
+// NewMatcher creates a Matcher
 func NewMatcher(q string) (Matcher, error) {
 	m := Matcher{}
 	criteria := strings.Split(q, ",")

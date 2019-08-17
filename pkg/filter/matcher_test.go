@@ -7,6 +7,7 @@ import (
 	"github.com/ryane/kfilt/pkg/resource"
 )
 
+// TODO: add label matcher tests
 func TestNewMatcher(t *testing.T) {
 	var noError = func(err error) bool { return err == nil }
 	tests := []struct {
@@ -73,6 +74,7 @@ func TestNewMatcher(t *testing.T) {
 	}
 }
 
+// TODO: add label matcher tests
 func TestMatcher(t *testing.T) {
 	tests := []struct {
 		matcher  filter.Matcher

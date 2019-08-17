@@ -4,11 +4,13 @@ import (
 	"github.com/ryane/kfilt/pkg/resource"
 )
 
+// Filter contains slices of inclusion and exclusion matchers
 type Filter struct {
 	Include []Matcher
 	Exclude []Matcher
 }
 
+// New creates a new Filter
 func New() *Filter {
 	return &Filter{
 		Include: []Matcher{},
@@ -16,6 +18,7 @@ func New() *Filter {
 	}
 }
 
+// Filter returns a filtered slice of Resources
 func (f *Filter) Filter(resources []resource.Resource) []resource.Resource {
 	filtered := append([]resource.Resource{}, resources...)
 
@@ -43,10 +46,12 @@ func (f *Filter) Filter(resources []resource.Resource) []resource.Resource {
 	return filtered
 }
 
+// AddInclude adds an inclusion matcher
 func (f *Filter) AddInclude(s Matcher) {
 	f.Include = append(f.Include, s)
 }
 
+// AddExclude adds an inclusion matcher
 func (f *Filter) AddExclude(s Matcher) {
 	f.Exclude = append(f.Exclude, s)
 }

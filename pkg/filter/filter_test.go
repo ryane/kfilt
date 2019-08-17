@@ -145,6 +145,61 @@ func TestFilter(t *testing.T) {
 				"/v1:serviceaccount::test-sa-2",
 			},
 		},
+		// label key selector
+		{
+			excludeMatchers{},
+			includeMatchers{
+				{
+					LabelSelector: "app",
+				},
+			},
+			expectIDs{
+				"/v1:serviceaccount::test-sa",
+				"/v1:serviceaccount::test-sa-2",
+				"/v1:pod:test-ns:test-pod",
+				"extensions/v1beta1:deployment:test-ns:test-deployment",
+			},
+		},
+		// label key/value selector
+		{
+			excludeMatchers{},
+			includeMatchers{
+				{
+					LabelSelector: "app=test",
+				},
+			},
+			expectIDs{
+				"/v1:serviceaccount::test-sa",
+				"/v1:pod:test-ns:test-pod",
+				"extensions/v1beta1:deployment:test-ns:test-deployment",
+			},
+		},
+		// label key/value selector
+		{
+			excludeMatchers{},
+			includeMatchers{
+				{
+					LabelSelector: "app=test2",
+				},
+			},
+			expectIDs{
+				"/v1:serviceaccount::test-sa-2",
+			},
+		},
+		// label != selector
+		{
+			excludeMatchers{},
+			includeMatchers{
+				{
+					LabelSelector: "app!=test",
+				},
+			},
+			expectIDs{
+				"/v1:serviceaccount::test-sa-2",
+				"extensions/v1beta1:deployment:app:app",
+				"/v1:configmap:app:app",
+			},
+		},
 	}
 
 	for _, test := range tests {

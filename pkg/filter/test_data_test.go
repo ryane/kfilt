@@ -9,6 +9,9 @@ var input = []resource.Resource{
 			"kind":       "ServiceAccount",
 			"metadata": map[string]interface{}{
 				"name": "test-sa",
+				"labels": map[string]interface{}{
+					"app": "test",
+				},
 			},
 		},
 	),
@@ -18,6 +21,9 @@ var input = []resource.Resource{
 			"kind":       "ServiceAccount",
 			"metadata": map[string]interface{}{
 				"name": "test-sa-2",
+				"labels": map[string]interface{}{
+					"app": "test2",
+				},
 			},
 		},
 	),
@@ -28,6 +34,10 @@ var input = []resource.Resource{
 			"metadata": map[string]interface{}{
 				"name":      "test-pod",
 				"namespace": "test-ns",
+				"labels": map[string]interface{}{
+					"app":     "test",
+					"version": "v1",
+				},
 			},
 		},
 	),
@@ -38,6 +48,9 @@ var input = []resource.Resource{
 			"metadata": map[string]interface{}{
 				"name":      "test-deployment",
 				"namespace": "test-ns",
+				"labels": map[string]interface{}{
+					"app": "test",
+				},
 			},
 		},
 	),
