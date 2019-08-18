@@ -99,6 +99,7 @@ You can use `--include` or `-i` to control which resources to include in the kfi
 | group, g      | apiVersion         | rbac.authorization.k8s.io |
 | version, v    | apiVersion         | v1                        |
 | namespace, ns | metadata.namespace | kube-system               |
+| labels, l     | metadata.labels    | app=my-app                |
 
 #### Examples
 
@@ -130,6 +131,12 @@ You can use multiple `--include` flags. kfilt will output resources that match a
 kfilt -f ./pkg/decoder/test.yaml -i k=serviceaccount -i k=configmap
 ```
 
+##### Filter with Label Selectors
+
+```
+kfilt -f ./pkg/decoder/test.yaml -i labels=app=test
+```
+
 ### Excluding Resources
 
 The `--exclude` or `-x` flag will allow you to exclude resources. This supports the same key value pairs as the `--include` flag.
@@ -154,13 +161,21 @@ kfilt -f ./pkg/decoder/test.yaml -x name=test
 kfilt -f ./pkg/decoder/test.yaml -x kind=configmap -x k=serviceaccount
 ```
 
+##### Exclude with Label Selectors
+
+```
+kfilt -f ./pkg/decoder/test.yaml -x labels=app=test
+```
+
 ### Shortcuts
 
-Because "kind" and "name" are the most commonly used fields to filter by, kfilt has special flags allowing you to save some typing.
+Because "kind", "name", and "labels" are the most commonly used fields to filter by, kfilt has special flags allowing you to save some typing.
 
 You can include by "kind" by using the `--kind` (or `-k`) flag with just the name of the kind you want to filter by. You can use `--exclude-kind` (or `-K`) for exclusions.
 
 The corresponding flags for "name" queries are `--name` (`-n`) and `--exclude-name` (`-N`).
+
+Finally, you can use label selectors with the `--labels` (`-l`) and `--exclude-labels` (`L`) flags.
 
 #### Include ConfigMaps and Service Accounts
 
@@ -172,6 +187,12 @@ kfilt -f ./pkg/decoder/test.yaml -k configmap -k serviceaccount
 
 ```
 kfilt -f ./pkg/decoder/test.yaml -N test
+```
+
+#### Include resources labeled with "app=test"
+
+```
+kfilt -f ./pkg/decoder/test.yaml -l app=test
 ```
 
 ---
