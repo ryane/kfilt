@@ -19,6 +19,7 @@ type matcherParseError interface {
 	MatcherParseError() bool
 }
 
+// IsMatcherParseError indicates whether an error is a matcher parser error
 func IsMatcherParseError(err error) bool {
 	te, ok := err.(matcherParseError)
 	return ok && te.MatcherParseError()

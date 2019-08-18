@@ -1,7 +1,6 @@
 package filter
 
 import (
-	"log"
 	"strings"
 
 	"github.com/ryane/kfilt/pkg/resource"
@@ -16,42 +15,39 @@ type Matcher struct {
 	Name          string
 	Namespace     string
 	LabelSelector string
-
-	labelSelector labels.Selector // parsed LabelSelector
 }
 
 // Match returns true if a Resource matches the criteria
-func (s *Matcher) Match(r resource.Resource) bool {
+func (s *Matcher) Match(r resource.Resource) (bool, error) {
 	gvk := r.GroupVersionKind()
 
 	if s.Group != "" && !strings.EqualFold(s.Group, gvk.Group) {
-		return false
+		return false, nil
 	}
 	if s.Version != "" && !strings.EqualFold(s.Version, gvk.Version) {
-		return false
+		return false, nil
 	}
 	if s.Kind != "" && !strings.EqualFold(s.Kind, gvk.Kind) {
-		return false
+		return false, nil
 	}
 	if s.Name != "" && !strings.EqualFold(s.Name, r.GetName()) {
-		return false
+		return false, nil
 	}
 	if s.Namespace != "" {
 		ns := r.GetNamespace()
 		if strings.ToLower(s.Namespace) == "default" {
 			if ns != "" && !strings.EqualFold(s.Namespace, ns) {
-				return false
+				return false, nil
 			}
 		} else if !strings.EqualFold(s.Namespace, ns) {
-			return false
+			return false, nil
 		}
 	}
 
 	if s.LabelSelector != "" {
 		selector, err := labels.Parse(s.LabelSelector)
-		// TODO: fix this
 		if err != nil {
-			log.Fatal(err)
+			return false, newMatcherParseError("invalid label selector: %v", err)
 		}
 		labelSet := labels.Set{}
 		for name, val := range r.GetLabels() {
@@ -59,11 +55,11 @@ func (s *Matcher) Match(r resource.Resource) bool {
 		}
 
 		if !selector.Matches(labelSet) {
-			return false
+			return false, nil
 		}
 	}
 
-	return true
+	return true, nil
 }
 
 // NewMatcher creates a Matcher
@@ -72,13 +68,20 @@ func NewMatcher(q string) (Matcher, error) {
 	criteria := strings.Split(q, ",")
 
 	if len(criteria) == 0 {
-		return m, newMatcherParseError("invalid matcher %q. query is required", q)
+		return m, newMatcherParseError(
+			"invalid matcher %q. query is required",
+			q,
+		)
 	}
 
 	for _, criterion := range criteria {
-		parts := strings.Split(criterion, "=")
+		parts := strings.SplitN(criterion, "=", 2)
 		if len(parts) != 2 {
-			return m, newMatcherParseError("invalid matcher %q. Should be in the format %q", criterion, "key=value")
+			return m, newMatcherParseError(
+				"invalid matcher %q. Should be in the format %q",
+				criterion,
+				"key=value",
+			)
 		}
 
 		key, val := strings.ToLower(parts[0]), parts[1]
@@ -94,8 +97,14 @@ func NewMatcher(q string) (Matcher, error) {
 			m.Version = val
 		case "namespace", "ns":
 			m.Namespace = val
+		case "labels", "l":
+			m.LabelSelector = val
 		default:
-			return m, newMatcherParseError("invalid matcher %q. key should be one of %v", criterion, validMatcherKeys())
+			return m, newMatcherParseError(
+				"invalid matcher %q. key should be one of %v",
+				criterion,
+				validMatcherKeys(),
+			)
 		}
 	}
 
@@ -109,5 +118,6 @@ func validMatcherKeys() []string {
 		"group", "g",
 		"version", "v",
 		"namespace", "ns",
+		"labels", "l",
 	}
 }

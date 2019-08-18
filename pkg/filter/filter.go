@@ -19,12 +19,16 @@ func New() *Filter {
 }
 
 // Filter returns a filtered slice of Resources
-func (f *Filter) Filter(resources []resource.Resource) []resource.Resource {
+func (f *Filter) Filter(resources []resource.Resource) ([]resource.Resource, error) {
+	var err error
 	filtered := append([]resource.Resource{}, resources...)
 
 	// excludes
 	for _, matcher := range f.Exclude {
-		filtered = exclude(filtered, matcher)
+		filtered, err = exclude(filtered, matcher)
+		if err != nil {
+			return filtered, err
+		}
 	}
 
 	// includes
@@ -32,7 +36,11 @@ func (f *Filter) Filter(resources []resource.Resource) []resource.Resource {
 		includeMap := make(map[string]interface{})
 		included := []resource.Resource{}
 		for _, matcher := range f.Include {
-			for _, match := range filter(filtered, matcher) {
+			results, err := filter(filtered, matcher)
+			if err != nil {
+				return filtered, err
+			}
+			for _, match := range results {
 				matchID := match.ID()
 				if _, ok := includeMap[matchID]; !ok {
 					includeMap[matchID] = struct{}{}
@@ -43,7 +51,7 @@ func (f *Filter) Filter(resources []resource.Resource) []resource.Resource {
 		filtered = included
 	}
 
-	return filtered
+	return filtered, nil
 }
 
 // AddInclude adds an inclusion matcher
@@ -56,22 +64,31 @@ func (f *Filter) AddExclude(s Matcher) {
 	f.Exclude = append(f.Exclude, s)
 }
 
-func filter(resources []resource.Resource, matcher Matcher) []resource.Resource {
+func filter(resources []resource.Resource, matcher Matcher) ([]resource.Resource, error) {
 	filtered := []resource.Resource{}
 	for _, r := range resources {
-		if matcher.Match(r) {
+		ok, err := matcher.Match(r)
+		if err != nil {
+			return filtered, err
+		}
+		if ok {
 			filtered = append(filtered, r)
 		}
 	}
-	return filtered
+	return filtered, nil
 }
 
-func exclude(resources []resource.Resource, matcher Matcher) []resource.Resource {
+func exclude(resources []resource.Resource, matcher Matcher) ([]resource.Resource, error) {
 	filtered := []resource.Resource{}
 	for _, r := range resources {
-		if !matcher.Match(r) {
+
+		ok, err := matcher.Match(r)
+		if err != nil {
+			return filtered, err
+		}
+		if !ok {
 			filtered = append(filtered, r)
 		}
 	}
-	return filtered
+	return filtered, nil
 }

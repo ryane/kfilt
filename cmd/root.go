@@ -115,7 +115,10 @@ func (r *root) run() error {
 		}
 	}
 
-	filtered := kfilt.Filter(results)
+	filtered, err := kfilt.Filter(results)
+	if err != nil {
+		return err
+	}
 
 	// print
 	if err := printer.New().Print(filtered); err != nil {
