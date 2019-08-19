@@ -44,6 +44,12 @@ func TestNewMatcher(t *testing.T) {
 			filter.Matcher{Name: "test"},
 			noError,
 		},
+		// namespace
+		{
+			"namespace=test-ns",
+			filter.Matcher{Namespace: "test-ns"},
+			noError,
+		},
 		// labels
 		{
 			"labels=app=test",
@@ -138,6 +144,14 @@ func TestMatcher(t *testing.T) {
 		},
 		{
 			filter.Matcher{
+				Group: "", Version: "v1", Kind: "ServiceAccount",
+			},
+			role(),
+			false,
+			noError,
+		},
+		{
+			filter.Matcher{
 				Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "Role",
 			},
 			role(),
@@ -225,6 +239,14 @@ func TestMatcher(t *testing.T) {
 				Kind:      "ServiceAccount",
 				Name:      "test-sa",
 				Namespace: "default",
+			},
+			serviceAccount(),
+			false,
+			noError,
+		},
+		{
+			filter.Matcher{
+				Namespace: "test-ns",
 			},
 			serviceAccount(),
 			false,

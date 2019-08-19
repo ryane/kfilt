@@ -65,7 +65,14 @@ func (s *Matcher) Match(r resource.Resource) (bool, error) {
 // NewMatcher creates a Matcher
 func NewMatcher(q string) (Matcher, error) {
 	m := Matcher{}
-	criteria := strings.Split(q, ",")
+
+	var criteria []string
+	parts := strings.Split(q, ",")
+	for _, part := range parts {
+		if part != "" {
+			criteria = append(criteria, part)
+		}
+	}
 
 	if len(criteria) == 0 {
 		return m, newMatcherParseError(
