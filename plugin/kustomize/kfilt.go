@@ -56,7 +56,11 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 	// create new resmap with filtered resources
 	kresmap := resmap.New()
 	kresourceFactory := p.rf.RF()
-	for _, res := range kfilt.Filter(resources) {
+	filtered, err := kfilt.Filter(resources)
+	if err != nil {
+		return err
+	}
+	for _, res := range filtered {
 		kres := kresourceFactory.FromMap(res.Object)
 		if err := kresmap.Append(kres); err != nil {
 			return err

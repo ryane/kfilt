@@ -24,9 +24,9 @@ func TestNewMatcher(t *testing.T) {
 		{
 			"k=secret",
 			filter.Matcher{Kind: "secret"},
-			func(error) bool { return true },
+			noError,
 		},
-		// last kind winws
+		// last kind wins
 		{
 			"kind=Secret,kind=ServiceAccount",
 			filter.Matcher{Kind: "ServiceAccount"},
@@ -42,6 +42,24 @@ func TestNewMatcher(t *testing.T) {
 		{
 			"n=test",
 			filter.Matcher{Name: "test"},
+			noError,
+		},
+		// namespace
+		{
+			"namespace=test-ns",
+			filter.Matcher{Namespace: "test-ns"},
+			noError,
+		},
+		// labels
+		{
+			"labels=app=test",
+			filter.Matcher{LabelSelector: "app=test"},
+			noError,
+		},
+		// labels !=
+		{
+			"l=app!=test",
+			filter.Matcher{LabelSelector: "app!=test"},
 			noError,
 		},
 		// no matcher
@@ -74,13 +92,15 @@ func TestNewMatcher(t *testing.T) {
 }
 
 func TestMatcher(t *testing.T) {
+	var noError = func(err error) bool { return err == nil }
 	tests := []struct {
-		matcher  filter.Matcher
-		resource resource.Resource
-		expected bool
+		matcher       filter.Matcher
+		resource      resource.Resource
+		expected      bool
+		expectedError func(err error) bool
 	}{
 		// empty matcher should match
-		{filter.Matcher{}, role(), true},
+		{filter.Matcher{}, role(), true, noError},
 		// kind matchers
 		{
 			filter.Matcher{
@@ -88,6 +108,7 @@ func TestMatcher(t *testing.T) {
 			},
 			role(),
 			true,
+			noError,
 		},
 		{
 			filter.Matcher{
@@ -95,6 +116,7 @@ func TestMatcher(t *testing.T) {
 			},
 			role(),
 			true,
+			noError,
 		},
 		{
 			filter.Matcher{
@@ -102,6 +124,7 @@ func TestMatcher(t *testing.T) {
 			},
 			role(),
 			false,
+			noError,
 		},
 		{
 			filter.Matcher{
@@ -109,6 +132,7 @@ func TestMatcher(t *testing.T) {
 			},
 			serviceAccount(),
 			true,
+			noError,
 		},
 		{
 			filter.Matcher{
@@ -116,6 +140,15 @@ func TestMatcher(t *testing.T) {
 			},
 			serviceAccount(),
 			true,
+			noError,
+		},
+		{
+			filter.Matcher{
+				Group: "", Version: "v1", Kind: "ServiceAccount",
+			},
+			role(),
+			false,
+			noError,
 		},
 		{
 			filter.Matcher{
@@ -123,6 +156,7 @@ func TestMatcher(t *testing.T) {
 			},
 			role(),
 			true,
+			noError,
 		},
 		{
 			filter.Matcher{
@@ -130,6 +164,7 @@ func TestMatcher(t *testing.T) {
 			},
 			role(),
 			false,
+			noError,
 		},
 		{
 			filter.Matcher{
@@ -140,6 +175,7 @@ func TestMatcher(t *testing.T) {
 			},
 			role(),
 			true,
+			noError,
 		},
 		{
 			filter.Matcher{
@@ -150,6 +186,7 @@ func TestMatcher(t *testing.T) {
 			},
 			role(),
 			false,
+			noError,
 		},
 		{
 			filter.Matcher{
@@ -161,6 +198,7 @@ func TestMatcher(t *testing.T) {
 			},
 			role(),
 			true,
+			noError,
 		},
 		{
 			filter.Matcher{
@@ -172,6 +210,7 @@ func TestMatcher(t *testing.T) {
 			},
 			role(),
 			true,
+			noError,
 		},
 		{
 			filter.Matcher{
@@ -182,6 +221,7 @@ func TestMatcher(t *testing.T) {
 			},
 			serviceAccount(),
 			true,
+			noError,
 		},
 		{
 			filter.Matcher{
@@ -191,6 +231,7 @@ func TestMatcher(t *testing.T) {
 			},
 			serviceAccount(),
 			true,
+			noError,
 		},
 		{
 			filter.Matcher{
@@ -201,12 +242,47 @@ func TestMatcher(t *testing.T) {
 			},
 			serviceAccount(),
 			false,
+			noError,
+		},
+		{
+			filter.Matcher{
+				Namespace: "test-ns",
+			},
+			serviceAccount(),
+			false,
+			noError,
+		},
+		{
+			filter.Matcher{LabelSelector: "app=test"},
+			serviceAccount(),
+			true,
+			noError,
+		},
+		{
+			filter.Matcher{LabelSelector: "app=test"},
+			role(),
+			false,
+			noError,
+		},
+		// bad label selector
+		{
+			filter.Matcher{LabelSelector: "app**test"},
+			role(),
+			false,
+			filter.IsMatcherParseError,
 		},
 	}
 
 	for _, test := range tests {
-		if result := test.matcher.Match(test.resource); result != test.expected {
-			t.Errorf("expected %v for %v, got %v", test.expected, test.matcher, result)
+		result, err := test.matcher.Match(test.resource)
+
+		if !test.expectedError(err) {
+			t.Errorf("unexpected error %v for %+v", err, test.matcher)
+			t.FailNow()
+		}
+
+		if result != test.expected {
+			t.Errorf("expected %v for %+v, got %v", test.expected, test.matcher, result)
 			t.FailNow()
 		}
 	}
@@ -232,6 +308,9 @@ func serviceAccount() resource.Resource {
 			"metadata": map[string]interface{}{
 				"name":      "test-sa",
 				"namespace": "monitoring",
+				"labels": map[string]interface{}{
+					"app": "test",
+				},
 			},
 		},
 	)

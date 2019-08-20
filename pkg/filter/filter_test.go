@@ -12,13 +12,16 @@ type includeMatchers []filter.Matcher
 type expectIDs []string
 
 func TestFilter(t *testing.T) {
+	var noError = func(err error) bool { return err == nil }
 	tests := []struct {
+		name    string
 		exclude excludeMatchers
 		include includeMatchers
 		expectIDs
+		expectedError func(err error) bool
 	}{
-		// no filters, return all
 		{
+			"no filters, return all",
 			excludeMatchers{},
 			includeMatchers{},
 			expectIDs{
@@ -29,9 +32,10 @@ func TestFilter(t *testing.T) {
 				"extensions/v1beta1:deployment:app:app",
 				"/v1:configmap:app:app",
 			},
+			noError,
 		},
-		// exclude service accounts
 		{
+			"exclude service accounts",
 			excludeMatchers{
 				{
 					Kind: "ServiceAccount",
@@ -44,9 +48,10 @@ func TestFilter(t *testing.T) {
 				"extensions/v1beta1:deployment:app:app",
 				"/v1:configmap:app:app",
 			},
+			noError,
 		},
-		// exclude service accounts and pods
 		{
+			"exclude service accounts and pods",
 			excludeMatchers{
 				{
 					Kind: "ServiceAccount",
@@ -61,9 +66,10 @@ func TestFilter(t *testing.T) {
 				"extensions/v1beta1:deployment:app:app",
 				"/v1:configmap:app:app",
 			},
+			noError,
 		},
-		// exclude deployments named "app"
 		{
+			"exclude deployments named \"app\"",
 			excludeMatchers{
 				{
 					Kind: "deployment",
@@ -78,9 +84,10 @@ func TestFilter(t *testing.T) {
 				"extensions/v1beta1:deployment:test-ns:test-deployment",
 				"/v1:configmap:app:app",
 			},
+			noError,
 		},
-		// include service accounts
 		{
+			"include service accounts",
 			excludeMatchers{},
 			includeMatchers{
 				{
@@ -91,9 +98,10 @@ func TestFilter(t *testing.T) {
 				"/v1:serviceaccount::test-sa",
 				"/v1:serviceaccount::test-sa-2",
 			},
+			noError,
 		},
-		// include service accounts and pods
 		{
+			"include service accounts and pods",
 			excludeMatchers{},
 			includeMatchers{
 				{
@@ -108,9 +116,10 @@ func TestFilter(t *testing.T) {
 				"/v1:serviceaccount::test-sa-2",
 				"/v1:pod:test-ns:test-pod",
 			},
+			noError,
 		},
-		// include service accounts and pods, but drop test-sa-2
 		{
+			"include service accounts and pods, but drop test-sa-2",
 			excludeMatchers{
 				{
 					Name: "test-sa-2",
@@ -128,9 +137,10 @@ func TestFilter(t *testing.T) {
 				"/v1:serviceaccount::test-sa",
 				"/v1:pod:test-ns:test-pod",
 			},
+			noError,
 		},
-		// don't include duplicate resources
 		{
+			"don't include duplicate resources",
 			excludeMatchers{},
 			includeMatchers{
 				{
@@ -144,22 +154,152 @@ func TestFilter(t *testing.T) {
 				"/v1:serviceaccount::test-sa",
 				"/v1:serviceaccount::test-sa-2",
 			},
+			noError,
+		},
+		{
+			"label key selector",
+			excludeMatchers{},
+			includeMatchers{
+				{
+					LabelSelector: "app",
+				},
+			},
+			expectIDs{
+				"/v1:serviceaccount::test-sa",
+				"/v1:serviceaccount::test-sa-2",
+				"/v1:pod:test-ns:test-pod",
+				"extensions/v1beta1:deployment:test-ns:test-deployment",
+			},
+			noError,
+		},
+		{
+			"label key/value selector",
+			excludeMatchers{},
+			includeMatchers{
+				{
+					LabelSelector: "app=test",
+				},
+			},
+			expectIDs{
+				"/v1:serviceaccount::test-sa",
+				"/v1:pod:test-ns:test-pod",
+				"extensions/v1beta1:deployment:test-ns:test-deployment",
+			},
+			noError,
+		},
+		{
+			"label key/value selector",
+			excludeMatchers{},
+			includeMatchers{
+				{
+					LabelSelector: "app=test2",
+				},
+			},
+			expectIDs{
+				"/v1:serviceaccount::test-sa-2",
+			},
+			noError,
+		},
+		{
+			"label != selector",
+			excludeMatchers{},
+			includeMatchers{
+				{
+					LabelSelector: "app!=test",
+				},
+			},
+			expectIDs{
+				"/v1:serviceaccount::test-sa-2",
+				"extensions/v1beta1:deployment:app:app",
+				"/v1:configmap:app:app",
+			},
+			noError,
+		},
+		{
+			"exclude by label selector",
+			excludeMatchers{
+				{
+					LabelSelector: "app==test",
+				},
+			},
+			includeMatchers{},
+			expectIDs{
+				"/v1:serviceaccount::test-sa-2",
+				"extensions/v1beta1:deployment:app:app",
+				"/v1:configmap:app:app",
+			},
+			noError,
+		},
+		{
+			"exclude by label != selector",
+			excludeMatchers{
+				{
+					LabelSelector: "app!=test",
+				},
+			},
+			includeMatchers{},
+			expectIDs{
+				"/v1:serviceaccount::test-sa",
+				"/v1:pod:test-ns:test-pod",
+				"extensions/v1beta1:deployment:test-ns:test-deployment",
+			},
+			noError,
+		},
+		{
+			"bad matcher filter include error",
+			excludeMatchers{},
+			includeMatchers{
+				{
+					LabelSelector: "app===test",
+				},
+			},
+			expectIDs{
+				"/v1:serviceaccount::test-sa",
+				"/v1:serviceaccount::test-sa-2",
+				"/v1:pod:test-ns:test-pod",
+				"extensions/v1beta1:deployment:test-ns:test-deployment",
+				"extensions/v1beta1:deployment:app:app",
+				"/v1:configmap:app:app",
+			},
+			filter.IsMatcherParseError,
+		},
+		{
+			"bad matcher filter exclude error",
+			excludeMatchers{
+				{
+					LabelSelector: "app===test",
+				},
+			},
+			includeMatchers{},
+			expectIDs{},
+			filter.IsMatcherParseError,
 		},
 	}
 
 	for _, test := range tests {
-		f := &filter.Filter{test.include, test.exclude}
+		f := filter.New()
+		for _, m := range test.include {
+			f.AddInclude(m)
+		}
+		for _, m := range test.exclude {
+			f.AddExclude(m)
+		}
 
-		results := f.Filter(input)
+		results, err := f.Filter(input)
+		if !test.expectedError(err) {
+			t.Errorf("unexpected error for %s: %v", test.name, err)
+			t.FailNow()
+		}
+
 		if len(results) != len(test.expectIDs) {
-			t.Errorf("expected %d results, got %d\nincludes: %+v, excludes: %+v\nresults: %v", len(test.expectIDs), len(results), f.Include, f.Exclude, resourceIDs(results))
+			t.Errorf("%s: expected %d results, got %d\nincludes: %+v, excludes: %+v\nresults: %v", test.name, len(test.expectIDs), len(results), f.Include, f.Exclude, resourceIDs(results))
 			t.FailNow()
 		}
 
 		for i, res := range results {
 			id := res.ID()
 			if id != test.expectIDs[i] {
-				t.Errorf("expected %s, got %s\nincludes: %v, excludes: %v", test.expectIDs[i], id, f.Include, f.Exclude)
+				t.Errorf("%s: expected %s, got %s\nincludes: %v, excludes: %v", test.name, test.expectIDs[i], id, f.Include, f.Exclude)
 				t.FailNow()
 			}
 		}

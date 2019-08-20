@@ -2,16 +2,22 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: test
+  labels:
+    app: test
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: test2
+  labels:
+    app: test2
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: example-config
+  labels:
+    app: test
 data:
   key: val
 ---

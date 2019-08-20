@@ -15,7 +15,7 @@ RUN mkdir -p sigs.k8s.io && \
 COPY kfilt.go sigs.k8s.io/kustomize/plugin/
 
 RUN cd sigs.k8s.io/kustomize && \
-  go get github.com/ryane/kfilt@plugin && \
+  go get github.com/ryane/kfilt && \
   go build -buildmode plugin -o ~/.config/kustomize/plugin/ryane/v1beta1/kfilter/Kfilter.so plugin/kfilt.go
 
 ENTRYPOINT ["/bin/kustomize"]

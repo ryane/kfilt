@@ -20,13 +20,15 @@ var (
 )
 
 type root struct {
-	includeKinds []string
-	includeNames []string
-	excludeKinds []string
-	excludeNames []string
-	include      []string
-	exclude      []string
-	filename     string
+	includeKinds         []string
+	includeNames         []string
+	excludeKinds         []string
+	excludeNames         []string
+	includeLabelSelector []string
+	excludeLabelSelector []string
+	include              []string
+	exclude              []string
+	filename             string
 }
 
 func newRootCommand(args []string) *cobra.Command {
@@ -50,6 +52,8 @@ func newRootCommand(args []string) *cobra.Command {
 	rootCmd.Flags().StringSliceVarP(&root.includeNames, "name", "n", []string{}, "Only include resources with name")
 	rootCmd.Flags().StringSliceVarP(&root.excludeKinds, "exclude-kind", "K", []string{}, "Exclude resources of kind")
 	rootCmd.Flags().StringSliceVarP(&root.excludeNames, "exclude-name", "N", []string{}, "Exclude resources with name")
+	rootCmd.Flags().StringSliceVarP(&root.includeLabelSelector, "labels", "l", []string{}, "Only include resources matching the label selector")
+	rootCmd.Flags().StringSliceVarP(&root.excludeLabelSelector, "exclude-labels", "L", []string{}, "Exclude resources matching the label selector")
 	rootCmd.Flags().StringArrayVarP(&root.include, "include", "i", []string{}, "Include resources matching criteria")
 	rootCmd.Flags().StringArrayVarP(&root.exclude, "exclude", "x", []string{}, "Exclude resources matching criteria")
 	rootCmd.Flags().StringVarP(&root.filename, "filename", "f", "", "Read manifests from file or URL")
@@ -87,12 +91,20 @@ func (r *root) run() error {
 		kfilt.AddInclude(filter.Matcher{Name: n})
 	}
 
+	for _, l := range r.includeLabelSelector {
+		kfilt.AddInclude(filter.Matcher{LabelSelector: l})
+	}
+
 	for _, k := range r.excludeKinds {
 		kfilt.AddExclude(filter.Matcher{Kind: k})
 	}
 
 	for _, n := range r.excludeNames {
 		kfilt.AddExclude(filter.Matcher{Name: n})
+	}
+
+	for _, l := range r.excludeLabelSelector {
+		kfilt.AddExclude(filter.Matcher{LabelSelector: l})
 	}
 
 	for _, q := range r.include {
@@ -115,7 +127,10 @@ func (r *root) run() error {
 		}
 	}
 
-	filtered := kfilt.Filter(results)
+	filtered, err := kfilt.Filter(results)
+	if err != nil {
+		return err
+	}
 
 	// print
 	if err := printer.New().Print(filtered); err != nil {
