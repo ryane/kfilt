@@ -1,3 +1,10 @@
+---
+---
+# test with empty and non-k8s yaml
+# warning below can come from helm charts
+---
+WARNING: This chart is deprecated
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
