@@ -2,6 +2,7 @@ package decoder
 
 import (
 	"io"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/ryane/kfilt/pkg/resource"
@@ -26,7 +27,7 @@ func (k *kubernetesDecoder) Decode(in io.Reader) ([]resource.Resource, error) {
 
 	decoder := k8syaml.NewYAMLOrJSONDecoder(in, 1024)
 
-	for err == nil {
+	for err == nil || isNotKubernetesYAML(err) {
 		var out resource.Resource
 		err = decoder.Decode(&out)
 		if err == nil && len(out.Object) > 0 {
@@ -47,4 +48,9 @@ func (k *kubernetesDecoder) Decode(in io.Reader) ([]resource.Resource, error) {
 	}
 
 	return result, nil
+}
+
+func isNotKubernetesYAML(err error) bool {
+	// no Kind
+	return strings.Contains(err.Error(), "Object 'Kind' is missing")
 }
