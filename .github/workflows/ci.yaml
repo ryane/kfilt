@@ -26,6 +26,10 @@ jobs:
       with:
         gofmt-path: '.'
         gofmt-flags: '-s -d'
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v2
+      with:
+        args: -v
     - name: Run Tests
       run: go test ./... -race -coverprofile=coverage.txt -covermode=atomic
     - name: Run GoReleaser
