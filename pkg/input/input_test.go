@@ -29,7 +29,7 @@ func TestRead(t *testing.T) {
 		{"https://httpbin.org/status/404", "", "404 Not Found"},
 		{"/tmp/fake-file-that-doesnt-exist.fake", "", "no such file or directory"},
 		{"https://broken\\url", "", "invalid character"},
-		{"http://fake_host", "", "no such host"},
+		{"http://fake_host", "", "dial tcp"},
 	}
 
 	for _, test := range tests {
