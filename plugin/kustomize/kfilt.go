@@ -18,7 +18,7 @@ type plugin struct {
 
 //noinspection GoUnusedGlobalVariable
 //nolint: golint
-var KustomizePlugin plugin
+var KustomizePlugin plugin //nolint:deadcode
 
 func (p *plugin) Config(ldr ifc.Loader, rf *resmap.Factory, c []byte) error {
 	p.rf = rf

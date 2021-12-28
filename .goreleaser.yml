@@ -12,6 +12,8 @@ builds:
   # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.
   ldflags:
   - -s -w -X github.com/ryane/kfilt/cmd.Version={{.Version}} -X github.com/ryane/kfilt/cmd.GitCommit={{.ShortCommit}}
+universal_binaries:
+- replace: true
 archives:
 - format: binary
 checksum:
@@ -30,8 +32,6 @@ dockers:
 - goos: linux
   goarch: amd64
   goarm: ''
-  binaries:
-  - kfilt
   image_templates:
   - "ryane/{{.ProjectName}}:latest"
   - "ryane/{{.ProjectName}}:{{ .Tag }}"

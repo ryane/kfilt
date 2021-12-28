@@ -3,6 +3,7 @@ package input_test
 import (
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/ryane/kfilt/pkg/input"
@@ -20,14 +21,31 @@ func TestRead(t *testing.T) {
 	tests := []struct {
 		filename       string
 		expectedString string
+		expectedError  string
 	}{
-		{"", ""},
-		{tmpfile, filedata},
-		{"https://httpbin.org/status/200", ""},
+		{"", "", ""},
+		{tmpfile, filedata, ""},
+		{"https://httpbin.org/status/200", "", ""},
+		{"https://httpbin.org/status/404", "", "404 Not Found"},
+		{"/tmp/fake-file-that-doesnt-exist.fake", "", "no such file or directory"},
+		{"https://broken\\url", "", "invalid character"},
+		{"http://fake_host", "", "dial tcp"},
 	}
 
 	for _, test := range tests {
 		r, err := input.Read(test.filename)
+
+		if test.expectedError != "" {
+			if !strings.Contains(err.Error(), test.expectedError) {
+				t.Errorf(
+					"error does not contain %q: %v",
+					test.expectedError,
+					err,
+				)
+				t.FailNow()
+			}
+			continue
+		}
 		if err != nil {
 			t.Error(err)
 			t.FailNow()
