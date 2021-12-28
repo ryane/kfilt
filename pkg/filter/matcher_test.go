@@ -271,6 +271,37 @@ func TestMatcher(t *testing.T) {
 			false,
 			filter.IsMatcherParseError,
 		},
+		// wildcard name matchers
+		{
+			filter.Matcher{Name: "test*"},
+			serviceAccount(),
+			true,
+			noError,
+		},
+		{
+			filter.Matcher{Name: "*-sa"},
+			serviceAccount(),
+			true,
+			noError,
+		},
+		{
+			filter.Matcher{Name: "*st-s*"},
+			serviceAccount(),
+			true,
+			noError,
+		},
+		{
+			filter.Matcher{Name: "teST*sa"},
+			serviceAccount(),
+			true,
+			noError,
+		},
+		{
+			filter.Matcher{Name: "te?t*sa"},
+			serviceAccount(),
+			true,
+			noError,
+		},
 	}
 
 	for _, test := range tests {
@@ -278,12 +309,12 @@ func TestMatcher(t *testing.T) {
 
 		if !test.expectedError(err) {
 			t.Errorf("unexpected error %v for %+v", err, test.matcher)
-			t.FailNow()
+			t.Fail()
 		}
 
 		if result != test.expected {
 			t.Errorf("expected %v for %+v, got %v", test.expected, test.matcher, result)
-			t.FailNow()
+			t.Fail()
 		}
 	}
 }

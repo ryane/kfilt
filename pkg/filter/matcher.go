@@ -3,6 +3,7 @@ package filter
 import (
 	"strings"
 
+	"github.com/minio/pkg/wildcard"
 	"github.com/ryane/kfilt/pkg/resource"
 	"k8s.io/apimachinery/pkg/labels"
 )
@@ -30,7 +31,11 @@ func (s *Matcher) Match(r resource.Resource) (bool, error) {
 	if s.Kind != "" && !strings.EqualFold(s.Kind, gvk.Kind) {
 		return false, nil
 	}
-	if s.Name != "" && !strings.EqualFold(s.Name, r.GetName()) {
+	if s.Name != "" &&
+		!wildcard.Match(
+			strings.ToLower(s.Name),
+			strings.ToLower(r.GetName()),
+		) {
 		return false, nil
 	}
 	if s.Namespace != "" {

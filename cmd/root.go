@@ -49,7 +49,7 @@ func newRootCommand(args []string) *cobra.Command {
 	}
 
 	rootCmd.Flags().StringSliceVarP(&root.includeKinds, "kind", "k", []string{}, "Only include resources of kind")
-	rootCmd.Flags().StringSliceVarP(&root.includeNames, "name", "n", []string{}, "Only include resources with name")
+	rootCmd.Flags().StringSliceVarP(&root.includeNames, "name", "n", []string{}, "Only include resources with name. Wildcards are supported.")
 	rootCmd.Flags().StringSliceVarP(&root.excludeKinds, "exclude-kind", "K", []string{}, "Exclude resources of kind")
 	rootCmd.Flags().StringSliceVarP(&root.excludeNames, "exclude-name", "N", []string{}, "Exclude resources with name")
 	rootCmd.Flags().StringSliceVarP(&root.includeLabelSelector, "labels", "l", []string{}, "Only include resources matching the label selector")

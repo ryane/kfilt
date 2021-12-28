@@ -101,6 +101,8 @@ You can use `--include` or `-i` to control which resources to include in the kfi
 | namespace, ns | metadata.namespace | kube-system               |
 | labels, l     | metadata.labels    | app=my-app                |
 
+Note that it is possible to use wildcards (`*`, and `?`) when filtering by name.
+
 #### Examples
 
 ##### Filter by kind
@@ -122,6 +124,14 @@ You can combine keys in a single `--include` by separating them with a comma. In
 ```
 kfilt -f ./pkg/decoder/test.yaml -i k=ServiceAccount,n=test
 ```
+
+##### Filter by name using wildcards
+
+```
+kfilt -f ./pkg/decoder/test.yaml -n "test*"
+```
+
+You can use `*` and `?` wildcard characters.
 
 ##### Filter by multiple kinds
 
