@@ -34,7 +34,7 @@ jobs:
       run: go test ./... -race -coverprofile=coverage.txt -covermode=atomic
     - uses: codecov/codecov-action@v2
       with:
-        fail_ci_if_error: true
+        fail_ci_if_error: false
         verbose: true
     - name: Run GoReleaser
       uses: goreleaser/goreleaser-action@v2
