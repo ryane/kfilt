@@ -3,6 +3,8 @@ on:
   push:
     tags:
     - 'v*.*.*'
+    branches:
+    - release-test
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
