@@ -9,6 +9,9 @@ builds:
   - windows
   - linux
   - darwin
+  goarch:
+  - amd64
+  - arm64
   # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.
   ldflags:
   - -s -w -X github.com/ryane/kfilt/cmd.Version={{.Version}} -X github.com/ryane/kfilt/cmd.GitCommit={{.ShortCommit}}
@@ -29,15 +32,43 @@ changelog:
     - Merge pull request
     - Merge branch
 dockers:
-- goos: linux
-  goarch: amd64
-  goarm: ''
-  image_templates:
-  - "ryane/{{.ProjectName}}:latest"
-  - "ryane/{{.ProjectName}}:{{ .Tag }}"
+- image_templates:
+  - "ryane/{{.ProjectName}}:{{ .Tag }}-amd64"
   skip_push: false
   dockerfile: Dockerfile
+  use: buildx
   build_flag_templates:
-  - "--label=org.label-schema.schema-version=1.0"
-  - "--label=org.label-schema.version={{.Version}}"
-  - "--label=org.label-schema.name={{.ProjectName}}"
+  - --platform=linux/amd64
+  - --label=org.opencontainers.image.title={{ .ProjectName }}
+  - --label=org.opencontainers.image.description={{ .ProjectName }}
+  - --label=org.opencontainers.image.url=https://github.com/ryane/{{ .ProjectName }}
+  - --label=org.opencontainers.image.source=https://github.com/ryane/{{ .ProjectName }}
+  - --label=org.opencontainers.image.version={{ .Version }}
+  - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
+  - --label=org.opencontainers.image.revision={{ .FullCommit }}
+  - --label=org.opencontainers.image.licenses=Apache-2.0
+- image_templates:
+  - "ryane/{{.ProjectName}}:{{ .Tag }}-arm64v8"
+  goarch: arm64
+  skip_push: false
+  dockerfile: Dockerfile
+  use: buildx
+  build_flag_templates:
+  - --platform=linux/arm64/v8
+  - --label=org.opencontainers.image.title={{ .ProjectName }}
+  - --label=org.opencontainers.image.description={{ .ProjectName }}
+  - --label=org.opencontainers.image.url=https://github.com/ryane/{{ .ProjectName }}
+  - --label=org.opencontainers.image.source=https://github.com/ryane/{{ .ProjectName }}
+  - --label=org.opencontainers.image.version={{ .Version }}
+  - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
+  - --label=org.opencontainers.image.revision={{ .FullCommit }}
+  - --label=org.opencontainers.image.licenses=Apache-2.0
+docker_manifests:
+- name_template: "ryane/{{ .ProjectName }}:{{ .Tag }}"
+  image_templates:
+  - "ryane/{{ .ProjectName }}:{{ .Tag }}-amd64"
+  - "ryane/{{ .ProjectName }}:{{ .Tag }}-arm64v8"
+- name_template: "ryane/{{ .ProjectName }}:latest"
+  image_templates:
+  - "ryane/{{ .ProjectName }}:{{ .Tag }}-amd64"
+  - "ryane/{{ .ProjectName }}:{{ .Tag }}-arm64v8"
