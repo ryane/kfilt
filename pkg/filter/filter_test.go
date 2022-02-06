@@ -173,6 +173,24 @@ func TestFilter(t *testing.T) {
 			noError,
 		},
 		{
+			"preserve order of returned resources",
+			excludeMatchers{},
+			includeMatchers{
+				{
+					Kind: "Pod",
+				},
+				{
+					Kind: "ServiceAccount",
+				},
+			},
+			expectIDs{
+				"/v1:serviceaccount::test-sa",
+				"/v1:serviceaccount::test-sa-2",
+				"/v1:pod:test-ns:test-pod",
+			},
+			noError,
+		},
+		{
 			"label key/value selector",
 			excludeMatchers{},
 			includeMatchers{
@@ -277,32 +295,34 @@ func TestFilter(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		f := filter.New()
-		for _, m := range test.include {
-			f.AddInclude(m)
-		}
-		for _, m := range test.exclude {
-			f.AddExclude(m)
-		}
+		t.Run(test.name, func(t *testing.T) {
+			f := filter.New()
+			for _, m := range test.include {
+				f.AddInclude(m)
+			}
+			for _, m := range test.exclude {
+				f.AddExclude(m)
+			}
 
-		results, err := f.Filter(input)
-		if !test.expectedError(err) {
-			t.Errorf("unexpected error for %s: %v", test.name, err)
-			t.FailNow()
-		}
-
-		if len(results) != len(test.expectIDs) {
-			t.Errorf("%s: expected %d results, got %d\nincludes: %+v, excludes: %+v\nresults: %v", test.name, len(test.expectIDs), len(results), f.Include, f.Exclude, resourceIDs(results))
-			t.FailNow()
-		}
-
-		for i, res := range results {
-			id := res.ID()
-			if id != test.expectIDs[i] {
-				t.Errorf("%s: expected %s, got %s\nincludes: %v, excludes: %v", test.name, test.expectIDs[i], id, f.Include, f.Exclude)
+			results, err := f.Filter(input)
+			if !test.expectedError(err) {
+				t.Errorf("unexpected error for %s: %v", test.name, err)
 				t.FailNow()
 			}
-		}
+
+			if len(results) != len(test.expectIDs) {
+				t.Errorf("%s: expected %d results, got %d\nincludes: %+v, excludes: %+v\nresults: %v", test.name, len(test.expectIDs), len(results), f.Include, f.Exclude, resourceIDs(results))
+				t.FailNow()
+			}
+
+			for i, res := range results {
+				id := res.ID()
+				if id != test.expectIDs[i] {
+					t.Errorf("%s: expected %s, got %s\nincludes: %v, excludes: %v", test.name, test.expectIDs[i], id, f.Include, f.Exclude)
+					t.FailNow()
+				}
+			}
+		})
 	}
 }
 
