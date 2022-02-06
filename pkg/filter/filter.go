@@ -1,6 +1,8 @@
 package filter
 
 import (
+	"sort"
+
 	"github.com/ryane/kfilt/pkg/resource"
 )
 
@@ -22,6 +24,11 @@ func New() *Filter {
 func (f *Filter) Filter(resources []resource.Resource) ([]resource.Resource, error) {
 	var err error
 	filtered := append([]resource.Resource{}, resources...)
+
+	ordermap := map[string]int{}
+	for i, res := range resources {
+		ordermap[res.ID()] = i
+	}
 
 	// excludes
 	for _, matcher := range f.Exclude {
@@ -50,6 +57,10 @@ func (f *Filter) Filter(resources []resource.Resource) ([]resource.Resource, err
 		}
 		filtered = included
 	}
+
+	sort.Slice(filtered, func(i, j int) bool {
+		return ordermap[filtered[i].ID()] < ordermap[filtered[j].ID()]
+	})
 
 	return filtered, nil
 }
