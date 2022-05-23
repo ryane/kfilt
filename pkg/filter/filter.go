@@ -6,10 +6,11 @@ import (
 	"github.com/ryane/kfilt/pkg/resource"
 )
 
-// Filter contains slices of inclusion and exclusion matchers
+// Filter contains slices of inclusion and exclusion matchers and other configuration
 type Filter struct {
 	Include []Matcher
 	Exclude []Matcher
+	count   int
 }
 
 // New creates a new Filter
@@ -17,6 +18,7 @@ func New() *Filter {
 	return &Filter{
 		Include: []Matcher{},
 		Exclude: []Matcher{},
+		count:   0,
 	}
 }
 
@@ -62,6 +64,12 @@ func (f *Filter) Filter(resources []resource.Resource) ([]resource.Resource, err
 		return ordermap[filtered[i].ID()] < ordermap[filtered[j].ID()]
 	})
 
+	// limit output
+	filtered, err = count(filtered, f.count)
+	if err != nil {
+		return filtered, err
+	}
+
 	return filtered, nil
 }
 
@@ -73,6 +81,10 @@ func (f *Filter) AddInclude(s Matcher) {
 // AddExclude adds an inclusion matcher
 func (f *Filter) AddExclude(s Matcher) {
 	f.Exclude = append(f.Exclude, s)
+}
+
+func (f *Filter) SetCount(count int) {
+	f.count = count
 }
 
 func filter(resources []resource.Resource, matcher Matcher) ([]resource.Resource, error) {
@@ -101,5 +113,16 @@ func exclude(resources []resource.Resource, matcher Matcher) ([]resource.Resourc
 			filtered = append(filtered, r)
 		}
 	}
+	return filtered, nil
+}
+
+func count(resources []resource.Resource, count int) ([]resource.Resource, error) {
+	filtered := []resource.Resource{}
+	if count > 0 && count <= len(resources) {
+		filtered = resources[:count]
+	} else {
+		filtered = resources
+	}
+
 	return filtered, nil
 }
