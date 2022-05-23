@@ -17,6 +17,7 @@ func TestFilter(t *testing.T) {
 		name    string
 		exclude excludeMatchers
 		include includeMatchers
+		count   int
 		expectIDs
 		expectedError func(err error) bool
 	}{
@@ -24,6 +25,64 @@ func TestFilter(t *testing.T) {
 			"no filters, return all",
 			excludeMatchers{},
 			includeMatchers{},
+			0,
+			expectIDs{
+				"/v1:serviceaccount::test-sa",
+				"/v1:serviceaccount::test-sa-2",
+				"/v1:pod:test-ns:test-pod",
+				"extensions/v1beta1:deployment:test-ns:test-deployment",
+				"extensions/v1beta1:deployment:app:app",
+				"/v1:configmap:app:app",
+			},
+			noError,
+		},
+		{
+			"no filters, return first 3",
+			excludeMatchers{},
+			includeMatchers{},
+			3,
+			expectIDs{
+				"/v1:serviceaccount::test-sa",
+				"/v1:serviceaccount::test-sa-2",
+				"/v1:pod:test-ns:test-pod",
+			},
+			noError,
+		},
+		{
+			"no filters, return all with count == length of input",
+			excludeMatchers{},
+			includeMatchers{},
+			6,
+			expectIDs{
+				"/v1:serviceaccount::test-sa",
+				"/v1:serviceaccount::test-sa-2",
+				"/v1:pod:test-ns:test-pod",
+				"extensions/v1beta1:deployment:test-ns:test-deployment",
+				"extensions/v1beta1:deployment:app:app",
+				"/v1:configmap:app:app",
+			},
+			noError,
+		},
+		{
+			"no filters, return all even with count larger than size of input",
+			excludeMatchers{},
+			includeMatchers{},
+			7,
+			expectIDs{
+				"/v1:serviceaccount::test-sa",
+				"/v1:serviceaccount::test-sa-2",
+				"/v1:pod:test-ns:test-pod",
+				"extensions/v1beta1:deployment:test-ns:test-deployment",
+				"extensions/v1beta1:deployment:app:app",
+				"/v1:configmap:app:app",
+			},
+			noError,
+		},
+		{
+			"no filters, handle negative count",
+			excludeMatchers{},
+			includeMatchers{},
+			-1,
 			expectIDs{
 				"/v1:serviceaccount::test-sa",
 				"/v1:serviceaccount::test-sa-2",
@@ -42,6 +101,7 @@ func TestFilter(t *testing.T) {
 				},
 			},
 			includeMatchers{},
+			0,
 			expectIDs{
 				"/v1:pod:test-ns:test-pod",
 				"extensions/v1beta1:deployment:test-ns:test-deployment",
@@ -61,6 +121,7 @@ func TestFilter(t *testing.T) {
 				},
 			},
 			includeMatchers{},
+			0,
 			expectIDs{
 				"extensions/v1beta1:deployment:test-ns:test-deployment",
 				"extensions/v1beta1:deployment:app:app",
@@ -77,6 +138,7 @@ func TestFilter(t *testing.T) {
 				},
 			},
 			includeMatchers{},
+			0,
 			expectIDs{
 				"/v1:serviceaccount::test-sa",
 				"/v1:serviceaccount::test-sa-2",
@@ -94,6 +156,7 @@ func TestFilter(t *testing.T) {
 					Kind: "ServiceAccount",
 				},
 			},
+			0,
 			expectIDs{
 				"/v1:serviceaccount::test-sa",
 				"/v1:serviceaccount::test-sa-2",
@@ -111,6 +174,7 @@ func TestFilter(t *testing.T) {
 					Kind: "pod",
 				},
 			},
+			0,
 			expectIDs{
 				"/v1:serviceaccount::test-sa",
 				"/v1:serviceaccount::test-sa-2",
@@ -133,6 +197,7 @@ func TestFilter(t *testing.T) {
 					Kind: "pod",
 				},
 			},
+			0,
 			expectIDs{
 				"/v1:serviceaccount::test-sa",
 				"/v1:pod:test-ns:test-pod",
@@ -150,6 +215,7 @@ func TestFilter(t *testing.T) {
 					Name: "test-sa-2",
 				},
 			},
+			0,
 			expectIDs{
 				"/v1:serviceaccount::test-sa",
 				"/v1:serviceaccount::test-sa-2",
@@ -164,6 +230,7 @@ func TestFilter(t *testing.T) {
 					LabelSelector: "app",
 				},
 			},
+			0,
 			expectIDs{
 				"/v1:serviceaccount::test-sa",
 				"/v1:serviceaccount::test-sa-2",
@@ -183,6 +250,7 @@ func TestFilter(t *testing.T) {
 					Kind: "ServiceAccount",
 				},
 			},
+			0,
 			expectIDs{
 				"/v1:serviceaccount::test-sa",
 				"/v1:serviceaccount::test-sa-2",
@@ -198,6 +266,7 @@ func TestFilter(t *testing.T) {
 					LabelSelector: "app=test",
 				},
 			},
+			0,
 			expectIDs{
 				"/v1:serviceaccount::test-sa",
 				"/v1:pod:test-ns:test-pod",
@@ -213,6 +282,7 @@ func TestFilter(t *testing.T) {
 					LabelSelector: "app=test2",
 				},
 			},
+			0,
 			expectIDs{
 				"/v1:serviceaccount::test-sa-2",
 			},
@@ -226,6 +296,7 @@ func TestFilter(t *testing.T) {
 					LabelSelector: "app!=test",
 				},
 			},
+			0,
 			expectIDs{
 				"/v1:serviceaccount::test-sa-2",
 				"extensions/v1beta1:deployment:app:app",
@@ -241,6 +312,7 @@ func TestFilter(t *testing.T) {
 				},
 			},
 			includeMatchers{},
+			0,
 			expectIDs{
 				"/v1:serviceaccount::test-sa-2",
 				"extensions/v1beta1:deployment:app:app",
@@ -256,6 +328,7 @@ func TestFilter(t *testing.T) {
 				},
 			},
 			includeMatchers{},
+			0,
 			expectIDs{
 				"/v1:serviceaccount::test-sa",
 				"/v1:pod:test-ns:test-pod",
@@ -271,6 +344,7 @@ func TestFilter(t *testing.T) {
 					LabelSelector: "app===test",
 				},
 			},
+			0,
 			expectIDs{
 				"/v1:serviceaccount::test-sa",
 				"/v1:serviceaccount::test-sa-2",
@@ -289,6 +363,7 @@ func TestFilter(t *testing.T) {
 				},
 			},
 			includeMatchers{},
+			0,
 			expectIDs{},
 			filter.IsMatcherParseError,
 		},
@@ -303,7 +378,7 @@ func TestFilter(t *testing.T) {
 			for _, m := range test.exclude {
 				f.AddExclude(m)
 			}
-
+			f.SetCount(test.count)
 			results, err := f.Filter(input)
 			if !test.expectedError(err) {
 				t.Errorf("unexpected error for %s: %v", test.name, err)
