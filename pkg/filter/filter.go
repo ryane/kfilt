@@ -117,7 +117,7 @@ func exclude(resources []resource.Resource, matcher Matcher) ([]resource.Resourc
 }
 
 func count(resources []resource.Resource, count int) ([]resource.Resource, error) {
-	filtered := []resource.Resource{}
+	var filtered []resource.Resource
 	if count > 0 && count <= len(resources) {
 		filtered = resources[:count]
 	} else {
