@@ -82,6 +82,17 @@ You can also run kfilt as a Docker container. Make sure you include `-i` in your
 kustomize build base | docker run --rm -i ryane/kfilt -k ConfigMap
 ```
 
+### AUR
+
+[kfilt](https://aur.archlinux.org/packages/kfilt-bin) is on the [Arch User
+Repository (AUR)](https://aur.archlinux.org/).
+
+### asdf Plugin
+
+[@feniix](https://github.com/feniix) created an
+[asdf](https://github.com/asdf-vm/asdf)
+[plugin](https://github.com/feniix/asdf-kfilt/).
+
 ### Running as a Kustomize Plugin (experimental)
 
 See [plugin/kustomize](./plugin/kustomize) for an experimental Kustomize plugin.
@@ -93,7 +104,7 @@ See [plugin/kustomize](./plugin/kustomize) for an experimental Kustomize plugin.
 You can use `--include` or `-i` to control which resources to include in the kfilt output. This argument takes a list of simple key value pairs that make up your query. The following keys are currently supported:
 
 | Key           | Field              | Example                   |
-|---------------|--------------------|---------------------------|
+| ------------- | ------------------ | ------------------------- |
 | kind, k       | kind               | ServiceAccount            |
 | name, n       | metadata.name      | my-app                    |
 | group, g      | apiVersion         | rbac.authorization.k8s.io |
@@ -207,4 +218,4 @@ kfilt -f ./pkg/decoder/test.yaml -l app=test
 
 ---
 
-<sup>1</sup> *note*: kfilt has not been tested extensively on Windows. Please file an issue if you run into any problems.
+<sup>1</sup> _note_: kfilt has not been tested extensively on Windows. Please file an issue if you run into any problems.
