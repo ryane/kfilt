@@ -28,7 +28,7 @@ type root struct {
 	excludeLabelSelector []string
 	include              []string
 	exclude              []string
-	count                int
+	limit                int
 	filename             string
 }
 
@@ -58,7 +58,7 @@ func newRootCommand(args []string) *cobra.Command {
 	rootCmd.Flags().StringArrayVarP(&root.include, "include", "i", []string{}, "Include resources matching criteria")
 	rootCmd.Flags().StringArrayVarP(&root.exclude, "exclude", "x", []string{}, "Exclude resources matching criteria")
 	rootCmd.Flags().StringVarP(&root.filename, "filename", "f", "", "Read manifests from file or URL")
-	rootCmd.Flags().IntVarP(&root.count, "count", "c", 0, "The amount of resources to include")
+	rootCmd.Flags().IntVar(&root.limit, "limit", 0, "Limit the number of matching resources")
 
 	rootCmd.SetVersionTemplate(`{{.Version}}`)
 
@@ -129,7 +129,7 @@ func (r *root) run() error {
 		}
 	}
 
-	kfilt.SetCount(r.count)
+	kfilt.Limit(r.limit)
 
 	filtered, err := kfilt.Filter(results)
 	if err != nil {

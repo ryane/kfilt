@@ -6,19 +6,20 @@ import (
 	"github.com/ryane/kfilt/pkg/resource"
 )
 
-// Filter contains slices of inclusion and exclusion matchers and other configuration
+// Filter contains slices of inclusion and exclusion matchers and other
+// configuration
 type Filter struct {
-	Include []Matcher
-	Exclude []Matcher
-	count   int
+	include []Matcher
+	exclude []Matcher
+	limit   int
 }
 
 // New creates a new Filter
 func New() *Filter {
 	return &Filter{
-		Include: []Matcher{},
-		Exclude: []Matcher{},
-		count:   0,
+		include: []Matcher{},
+		exclude: []Matcher{},
+		limit:   0,
 	}
 }
 
@@ -33,7 +34,7 @@ func (f *Filter) Filter(resources []resource.Resource) ([]resource.Resource, err
 	}
 
 	// excludes
-	for _, matcher := range f.Exclude {
+	for _, matcher := range f.exclude {
 		filtered, err = exclude(filtered, matcher)
 		if err != nil {
 			return filtered, err
@@ -41,10 +42,10 @@ func (f *Filter) Filter(resources []resource.Resource) ([]resource.Resource, err
 	}
 
 	// includes
-	if len(f.Include) > 0 {
+	if len(f.include) > 0 {
 		includeMap := make(map[string]interface{})
 		included := []resource.Resource{}
-		for _, matcher := range f.Include {
+		for _, matcher := range f.include {
 			results, err := filter(filtered, matcher)
 			if err != nil {
 				return filtered, err
@@ -65,7 +66,7 @@ func (f *Filter) Filter(resources []resource.Resource) ([]resource.Resource, err
 	})
 
 	// limit output
-	filtered, err = count(filtered, f.count)
+	filtered, err = limit(filtered, f.limit)
 	if err != nil {
 		return filtered, err
 	}
@@ -73,18 +74,26 @@ func (f *Filter) Filter(resources []resource.Resource) ([]resource.Resource, err
 	return filtered, nil
 }
 
+func (f *Filter) Included() []Matcher {
+	return f.include
+}
+
+func (f *Filter) Excluded() []Matcher {
+	return f.exclude
+}
+
 // AddInclude adds an inclusion matcher
 func (f *Filter) AddInclude(s Matcher) {
-	f.Include = append(f.Include, s)
+	f.include = append(f.include, s)
 }
 
 // AddExclude adds an inclusion matcher
 func (f *Filter) AddExclude(s Matcher) {
-	f.Exclude = append(f.Exclude, s)
+	f.exclude = append(f.exclude, s)
 }
 
-func (f *Filter) SetCount(count int) {
-	f.count = count
+func (f *Filter) Limit(limit int) {
+	f.limit = limit
 }
 
 func filter(resources []resource.Resource, matcher Matcher) ([]resource.Resource, error) {
@@ -116,10 +125,10 @@ func exclude(resources []resource.Resource, matcher Matcher) ([]resource.Resourc
 	return filtered, nil
 }
 
-func count(resources []resource.Resource, count int) ([]resource.Resource, error) {
+func limit(resources []resource.Resource, limit int) ([]resource.Resource, error) {
 	var filtered []resource.Resource
-	if count > 0 && count <= len(resources) {
-		filtered = resources[:count]
+	if limit > 0 && limit <= len(resources) {
+		filtered = resources[:limit]
 	} else {
 		filtered = resources
 	}

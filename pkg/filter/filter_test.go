@@ -17,7 +17,7 @@ func TestFilter(t *testing.T) {
 		name    string
 		exclude excludeMatchers
 		include includeMatchers
-		count   int
+		limit   int
 		expectIDs
 		expectedError func(err error) bool
 	}{
@@ -49,7 +49,7 @@ func TestFilter(t *testing.T) {
 			noError,
 		},
 		{
-			"no filters, return all with count == length of input",
+			"no filters, return all with limit == length of input",
 			excludeMatchers{},
 			includeMatchers{},
 			6,
@@ -64,7 +64,7 @@ func TestFilter(t *testing.T) {
 			noError,
 		},
 		{
-			"no filters, return all even with count larger than size of input",
+			"no filters, return all even with limit larger than size of input",
 			excludeMatchers{},
 			includeMatchers{},
 			7,
@@ -79,7 +79,7 @@ func TestFilter(t *testing.T) {
 			noError,
 		},
 		{
-			"no filters, handle negative count",
+			"no filters, handle negative limit",
 			excludeMatchers{},
 			includeMatchers{},
 			-1,
@@ -378,7 +378,7 @@ func TestFilter(t *testing.T) {
 			for _, m := range test.exclude {
 				f.AddExclude(m)
 			}
-			f.SetCount(test.count)
+			f.Limit(test.limit)
 			results, err := f.Filter(input)
 			if !test.expectedError(err) {
 				t.Errorf("unexpected error for %s: %v", test.name, err)
@@ -386,14 +386,14 @@ func TestFilter(t *testing.T) {
 			}
 
 			if len(results) != len(test.expectIDs) {
-				t.Errorf("%s: expected %d results, got %d\nincludes: %+v, excludes: %+v\nresults: %v", test.name, len(test.expectIDs), len(results), f.Include, f.Exclude, resourceIDs(results))
+				t.Errorf("%s: expected %d results, got %d\nincludes: %+v, excludes: %+v\nresults: %v", test.name, len(test.expectIDs), len(results), f.Included(), f.Excluded(), resourceIDs(results))
 				t.FailNow()
 			}
 
 			for i, res := range results {
 				id := res.ID()
 				if id != test.expectIDs[i] {
-					t.Errorf("%s: expected %s, got %s\nincludes: %v, excludes: %v", test.name, test.expectIDs[i], id, f.Include, f.Exclude)
+					t.Errorf("%s: expected %s, got %s\nincludes: %v, excludes: %v", test.name, test.expectIDs[i], id, f.Included(), f.Excluded())
 					t.FailNow()
 				}
 			}
