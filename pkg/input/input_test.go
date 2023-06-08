@@ -1,22 +1,58 @@
 package input_test
 
 import (
+	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ryane/kfilt/pkg/input"
 )
+
+func waitForServer(URL string, timeout time.Duration) error {
+	type ok struct{}
+
+	done := make(chan ok)
+	go func() {
+		for {
+			_, err := http.Get(URL)
+			if err == nil {
+				done <- ok{}
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
+	}()
+
+	select {
+	case <-done:
+		return nil
+	case <-time.After(timeout):
+		return fmt.Errorf("server did not reply after %v", timeout)
+	}
+}
 
 func TestRead(t *testing.T) {
 	filedata := "---"
 	tmpfile, err := createTempFile(filedata)
 	if err != nil {
-		t.Error(err)
+		t.Error(err, "unable to create temp file")
 		t.FailNow()
 	}
 	defer os.Remove(tmpfile)
+
+	http.HandleFunc("/404", http.NotFound)
+	http.HandleFunc("/200", func(http.ResponseWriter, *http.Request) {})
+	go func() {
+		http.ListenAndServe(":8822", nil)
+	}()
+
+	if err := waitForServer("http://localhost:8822", time.Second*3); err != nil {
+		t.Error(err, "test server not responding")
+		t.FailNow()
+	}
 
 	tests := []struct {
 		filename       string
@@ -25,8 +61,8 @@ func TestRead(t *testing.T) {
 	}{
 		{"", "", ""},
 		{tmpfile, filedata, ""},
-		{"https://httpbin.org/status/200", "", ""},
-		{"https://httpbin.org/status/404", "", "404 Not Found"},
+		{"http://localhost:8822/200", "", ""},
+		{"http://localhost:8822/404", "", "404 Not Found"},
 		{"/tmp/fake-file-that-doesnt-exist.fake", "", "no such file or directory"},
 		{"https://broken\\url", "", "invalid character"},
 		{"http://fake_host", "", "dial tcp"},
