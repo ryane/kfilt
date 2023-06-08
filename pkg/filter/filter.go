@@ -66,10 +66,7 @@ func (f *Filter) Filter(resources []resource.Resource) ([]resource.Resource, err
 	})
 
 	// limit output
-	filtered, err = limit(filtered, f.limit)
-	if err != nil {
-		return filtered, err
-	}
+	filtered = limit(filtered, f.limit)
 
 	return filtered, nil
 }
@@ -125,7 +122,7 @@ func exclude(resources []resource.Resource, matcher Matcher) ([]resource.Resourc
 	return filtered, nil
 }
 
-func limit(resources []resource.Resource, limit int) ([]resource.Resource, error) {
+func limit(resources []resource.Resource, limit int) []resource.Resource {
 	var filtered []resource.Resource
 	if limit > 0 && limit <= len(resources) {
 		filtered = resources[:limit]
@@ -133,5 +130,5 @@ func limit(resources []resource.Resource, limit int) ([]resource.Resource, error
 		filtered = resources
 	}
 
-	return filtered, nil
+	return filtered
 }
