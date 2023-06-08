@@ -1,7 +1,7 @@
 package input_test
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"strings"
 	"testing"
@@ -52,7 +52,7 @@ func TestRead(t *testing.T) {
 		}
 
 		defer r.Close()
-		data, err := ioutil.ReadAll(r)
+		data, err := io.ReadAll(r)
 		if err != nil {
 			t.Error(err)
 			t.FailNow()
@@ -66,7 +66,7 @@ func TestRead(t *testing.T) {
 }
 
 func createTempFile(data string) (string, error) {
-	tmpfile, err := ioutil.TempFile("", "input_test")
+	tmpfile, err := os.CreateTemp("", "input_test")
 	if err != nil {
 		return "", err
 	}

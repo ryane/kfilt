@@ -3,7 +3,6 @@ package input
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -12,7 +11,7 @@ import (
 
 func Read(f string) (io.ReadCloser, error) {
 	if f == "" {
-		return ioutil.NopCloser(os.Stdin), nil
+		return io.NopCloser(os.Stdin), nil
 	}
 
 	if strings.HasPrefix(f, "http://") || strings.HasPrefix(f, "https://") {
