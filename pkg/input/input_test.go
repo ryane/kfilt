@@ -46,7 +46,7 @@ func TestRead(t *testing.T) {
 	http.HandleFunc("/404", http.NotFound)
 	http.HandleFunc("/200", func(http.ResponseWriter, *http.Request) {})
 	go func() {
-		http.ListenAndServe(":8822", nil)
+		_ = http.ListenAndServe(":8822", nil)
 	}()
 
 	if err := waitForServer("http://localhost:8822", time.Second*3); err != nil {
