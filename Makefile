@@ -24,3 +24,9 @@ docker:
 
 push: build
 	docker push ryane/kfilt:${GIT_SHA}${GIT_DIRTY}
+
+.PHONY: lint
+lint:
+	golangci-lint run
+
+precommit: build lint test

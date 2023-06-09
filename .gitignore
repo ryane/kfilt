@@ -1,3 +1,5 @@
 kfilt
 dist
 coverage.txt
+/result
+/.envrc

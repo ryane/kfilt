@@ -93,6 +93,12 @@ Repository (AUR)](https://aur.archlinux.org/).
 [asdf](https://github.com/asdf-vm/asdf)
 [plugin](https://github.com/feniix/asdf-kfilt/).
 
+### nix flake
+
+```shell
+nix run github:ryane/kfilt#kfilt -- -f ./pkg/decoder/test.yaml -k serviceaccount
+```
+
 ### Running as a Kustomize Plugin (experimental)
 
 See [plugin/kustomize](./plugin/kustomize) for an experimental Kustomize plugin.
