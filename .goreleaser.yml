@@ -1,9 +1,12 @@
+version: 2
 project_name: kfilt
 before:
   hooks:
     - go mod download
 builds:
-- env:
+- id: kfilt
+  binary: kfilt
+  env:
   - CGO_ENABLED=0
   goos:
   - windows
@@ -15,14 +18,51 @@ builds:
   # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.
   ldflags:
   - -s -w -X github.com/ryane/kfilt/cmd.Version={{.Version}} -X github.com/ryane/kfilt/cmd.GitCommit={{.ShortCommit}}
+- id: kubectl-kfilt
+  binary: kubectl-kfilt
+  env:
+  - CGO_ENABLED=0
+  goos:
+  - windows
+  - linux
+  - darwin
+  goarch:
+  - amd64
+  - arm64
+  ldflags:
+  - -s -w -X github.com/ryane/kfilt/cmd.Version={{.Version}} -X github.com/ryane/kfilt/cmd.GitCommit={{.ShortCommit}}
 universal_binaries:
-- replace: true
+- id: kfilt
+  replace: true
+  ids:
+  - kfilt
+  name_template: "kfilt"
+- id: kubectl-kfilt
+  replace: true
+  ids:
+  - kubectl-kfilt
+  name_template: "kubectl-kfilt"
 archives:
-- format: binary
+- id: kfilt-binary
+  ids:
+  - kfilt
+  formats:
+  - binary
+  name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+- id: kubectl-kfilt-archive
+  ids:
+  - kubectl-kfilt
+  name_template: "kubectl-kfilt_{{.Os}}_{{.Arch}}"
+  formats:
+  - tar.gz
+  - zip
+  files:
+  - LICENSE
+  - README.md
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "master"
+  version_template: "main"
 changelog:
   sort: asc
   filters:
