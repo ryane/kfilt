@@ -1,0 +1,51 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: kfilt
+spec:
+  version: "{{ .TagName }}"
+  homepage: https://github.com/ryane/kfilt
+  shortDescription: Filter Kubernetes resources
+  description: |
+    kfilt is a tool that lets you filter specific resources from a stream of
+    Kubernetes YAML manifests. It can read manifests from a file, URL, or from stdin.
+
+    kfilt is useful for developers working with Helm charts or Kustomize bases,
+    allowing you to narrow down focus to specific resources or exclude certain resources.
+  platforms:
+  - selector:
+      matchLabels:
+        os: linux
+        arch: amd64
+    {{addURIAndSha "https://github.com/ryane/kfilt/releases/download/{{ .TagName }}/kubectl-kfilt_linux_amd64.tar.gz" .TagName }}
+    bin: kubectl-kfilt
+  - selector:
+      matchLabels:
+        os: linux
+        arch: arm64
+    {{addURIAndSha "https://github.com/ryane/kfilt/releases/download/{{ .TagName }}/kubectl-kfilt_linux_arm64.tar.gz" .TagName }}
+    bin: kubectl-kfilt
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+    {{addURIAndSha "https://github.com/ryane/kfilt/releases/download/{{ .TagName }}/kubectl-kfilt_darwin_all.tar.gz" .TagName }}
+    bin: kubectl-kfilt
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: arm64
+    {{addURIAndSha "https://github.com/ryane/kfilt/releases/download/{{ .TagName }}/kubectl-kfilt_darwin_all.tar.gz" .TagName }}
+    bin: kubectl-kfilt
+  - selector:
+      matchLabels:
+        os: windows
+        arch: amd64
+    {{addURIAndSha "https://github.com/ryane/kfilt/releases/download/{{ .TagName }}/kubectl-kfilt_windows_amd64.zip" .TagName }}
+    bin: kubectl-kfilt.exe
+  - selector:
+      matchLabels:
+        os: windows
+        arch: arm64
+    {{addURIAndSha "https://github.com/ryane/kfilt/releases/download/{{ .TagName }}/kubectl-kfilt_windows_arm64.zip" .TagName }}
+    bin: kubectl-kfilt.exe
