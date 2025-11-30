@@ -70,9 +70,25 @@ Find all resources named "nginx-ingress-controller" regardless of kind.
 kubectl get all -A -oyaml | kfilt -i name=nginx-ingress-controller
 ```
 
+When used as a kubectl plugin:
+
+```
+kubectl get all -A -oyaml | kubectl kfilt -i name=nginx-ingress-controller
+```
+
 ## Installation
 
 kfilt is available on Linux, Mac, and Windows <sup>1</sup> and binaries are available on the [releases](https://github.com/ryane/kfilt/releases) page.
+
+### kubectl Plugin
+
+kfilt can be used as a kubectl plugin. Install via [Krew](https://krew.sigs.k8s.io/):
+
+```bash
+kubectl krew install kfilt
+```
+
+See [kubectl plugin documentation](./plugin/kubectl/README.md) for detailed installation and usage instructions.
 
 ### Docker
 
