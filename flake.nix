@@ -9,13 +9,13 @@
   outputs = { self, nixpkgs, flake-utils, ... }:
     let
       kfilt = pkgs:
-        pkgs.buildGo120Module rec {
+        pkgs.buildGoModule rec {
           name = "kfilt";
           version = self.shortRev or "dirty";
           src = ./.;
           # this needs to be changed any time there is a change in go.mod
           # dependencies
-          vendorSha256 = "sha256-c77CzpE9cPyobt87uO0QlkKD+xC/tM7wOy4orM62tnI=";
+          vendorHash = null;
           nativeBuildInputs = [ ];
           CGO_ENABLED = 0;
           doCheck = false;
