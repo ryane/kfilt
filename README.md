@@ -93,6 +93,10 @@ Repository (AUR)](https://aur.archlinux.org/).
 [asdf](https://github.com/asdf-vm/asdf)
 [plugin](https://github.com/feniix/asdf-kfilt/).
 
+### nixpkgs
+
+[kfilt](https://search.nixos.org/packages?show=kfilt) is on [nixpkgs](https://github.com/NixOS/nixpkgs).
+
 ### nix flake
 
 ```shell
