@@ -1,9 +1,9 @@
 # kfilt
 
-[![Build Status](https://travis-ci.org/ryane/kfilt.svg?branch=master)](https://travis-ci.org/ryane/kfilt)
-[![Code Coverage](https://codecov.io/gh/ryane/kfilt/branch/master/graph/badge.svg)](https://codecov.io/gh/ryane/kfilt)
+[![Build Status](https://github.com/ryane/kfilt/workflows/CI/badge.svg)](https://github.com/ryane/kfilt/actions)
+[![Code Coverage](https://codecov.io/gh/ryane/kfilt/branch/main/graph/badge.svg)](https://codecov.io/gh/ryane/kfilt)
 [![Go Report Card](https://goreportcard.com/badge/ryane/kfilt)](https://goreportcard.com/report/ryane/kfilt)
-[![LICENSE](https://img.shields.io/github/license/ryane/kfilt.svg)](https://github.com/ryane/kfilt/blob/master/LICENSE)
+[![LICENSE](https://img.shields.io/github/license/ryane/kfilt.svg)](https://github.com/ryane/kfilt/blob/main/LICENSE)
 [![Releases](https://img.shields.io/github/release-pre/ryane/kfilt.svg)](https://github.com/ryane/kfilt/releases)
 
 kfilt can filter Kubernetes resources.
